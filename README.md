@@ -72,8 +72,13 @@ angular:
 
 ## Useful links
 
-
 * Install ROS Kinetic
 [http://wiki.ros.org/kinetic/Installation/Ubuntu](http://wiki.ros.org/kinetic/Installation/Ubuntu)
 * Install Gazebo
 [http://gazebosim.org/tutorials?tut=install_ubuntu&cat=install](http://gazebosim.org/tutorials?tut=install_ubuntu&cat=install)
+
+## How to ___.
+
+* _Start streaming data from vicon via UDP_: 
+On the Vicon PC run Programfiles/vicon/datastreamsdk/win64/ViconDataStreamSDK_Ctest.exe
+
