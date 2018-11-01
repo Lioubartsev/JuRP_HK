@@ -1,5 +1,13 @@
 # JuRP-HK Documentation
+## GIT 101
+```
+git clone <https://github.com/USERNAME/REPOSITORY.git
+git pull
+git add <file>
+git commit -m <Commit note>
+git status
 
+```
 
 ## Useful commands
 * Add setup-file to the terminal's environment variables (here setup.bash for ROS Kinetic)
