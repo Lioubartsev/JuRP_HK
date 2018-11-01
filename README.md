@@ -3,8 +3,16 @@
 ```
 git clone <https://github.com/USERNAME/REPOSITORY.git
 git pull
+
+// First add the file to index
 git add <file>
+
+// Then merge all added files to a commit
 git commit -m <Commit note>
+
+// At last upload to cloud
+git push
+
 git status
 
 ```
