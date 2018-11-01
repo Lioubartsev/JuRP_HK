@@ -48,14 +48,27 @@ angular:
 ```>> killall -9 rosout roslaunch rosmaster gzserver gzclient```
 
 * Launch Matlab
- 
+
  ```>> MATLAB_2018/bin/matlab```
 
 * Print a ROS Topic to terminal
  
  ```>> rostopic echo <topic>```
 
+* Setup a ROS master and list to a serial ROS node (on port /dev/ttyACM0) _http://wiki.ros.org/rosserial_arduino/Tutorials/Hello%20World_
+```
+>> roscore
+>> rosrun rosserial_python serial_node.py /dev/ttyACM0
+>> rostopic echo chatter
+``` 
 
+
+* Setup a a ROS master and a topic “toggle_led” which is read on the serial node _http://wiki.ros.org/rosserial_arduino/Tutorials/Blink_
+```
+>> roscore
+>> rosrun rosserial_python serial_node.py /dev/ttyACM0
+>> rostopic pub toggle_led std_msgs/Empty --once
+``` 
 
 ## Useful links
 
