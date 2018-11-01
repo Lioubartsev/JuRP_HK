@@ -1,13 +1,27 @@
-%% Accumulate point
+close all
+rosshutdown
+rosinit
 
-points = [1 2 4 8 16 16 40 60 100;
-            1 2 3 4 5 6 7 8 9];
-        
-pointsz = [1 2 3 4 5 6 7 8 9];
+rostopic list
 
-x_points = points(1, :)
-y_points = points(2, :)
-z_points = pointsz
+rostopic info /object_update
+
+ou = rossubscriber('/object_update')
+
+x_points = []
+y_points = []
+z_points = []
+
+for i = 1:50
+    i
+    data = receive(ou, 10)
+    if data.Objects.Z > 70
+        x_points = [x_points data.Objects.X/10];
+        y_points = [y_points data.Objects.Y/10];
+        z_points = [z_points data.Objects.Z/10];
+    end
+    
+end
 
 %% Fit line
 %p = fit(points', pointsz', ft);
@@ -18,6 +32,7 @@ fit_yz = polyfit(y_points', z_points', 2)
 
 close all
 plot(x_points, z_points, '+r')
+title('XZ')
 hold on
 grid on
 
@@ -28,6 +43,7 @@ plot(x1, y1)
 % YZ
 figure
 plot(y_points, z_points, '+r')
+title('YZ')
 hold on
 grid on
 
@@ -35,9 +51,11 @@ x1 = linspace(y_points(1), y_points(end), 1000);
 y1 = polyval(fit_yz, x1);
 plot(x1, y1)
 
-%% Calculate catching position
-% Ie. intersection between line and the plane Z = 0
-fit_xz
-fit_yz
-%max(roots(p))
-%% Send
+roots(fit_xz)
+%%
+%plot(x_points, z_points, '+')
+%hold on
+
+%figure
+%plot(y_points, z_points, '+')
+%hold on
