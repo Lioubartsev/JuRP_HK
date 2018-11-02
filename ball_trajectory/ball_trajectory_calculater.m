@@ -11,9 +11,20 @@ ou = rossubscriber('/object_update')
 x_points = []
 y_points = []
 z_points = []
+%
+%zzz= []
+%for i =1:50
+%    i
+%zzz = [zzz data.Objects.Z/10];
+%end
+%zzz
+data = receive(ou, 10)
+while(data.Objects.Z/10 < 40 )
+    data = receive(ou, 10)
+end
 
-for i = 1:50
-    i
+for i = 1:40
+    i;
     data = receive(ou, 10)
     if data.Objects.Z > 70
         x_points = [x_points data.Objects.X/10];
@@ -22,7 +33,6 @@ for i = 1:50
     end
     
 end
-
 %% Fit line
 %p = fit(points', pointsz', ft);
 
@@ -52,6 +62,7 @@ y1 = polyval(fit_yz, x1);
 plot(x1, y1)
 
 roots(fit_xz)
+
 %%
 %plot(x_points, z_points, '+')
 %hold on
