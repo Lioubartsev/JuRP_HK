@@ -100,7 +100,7 @@ On the Vicon PC run Programfiles/vicon/datastreamsdk/win64/ViconDataStreamSDK_Ct
 
 # Ball Trajectory Documentation
 ## Samples
-The ball trajectory estimater has recorded samples. 
+The ball trajectory estimater has n recorded samples with properties as: 
 
 1. A throw mainly in YZ-plane
 2. A throw mainly in XZ-plane
@@ -116,7 +116,7 @@ y_points: 300 y coordinates
 z_points: 300 z coordinates
 sample_time_rel: 300 relative sample times 
 ```
-and figures (*sn_xz.jpg*, *sn_yz*) of the trajectory. Below is the two planes for sample1:
+and figures (*sn_xz.jpg*, *sn_yz.jpg*) of the trajectory. Below is the two planes for sample1:
 
 ![XZ_plane](/ball_trajectory/samples/s1_xz.jpg)
 ![YZ_plane](/ball_trajectory/samples/s1_yz.jpg)
