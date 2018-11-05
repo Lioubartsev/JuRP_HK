@@ -98,3 +98,18 @@ angular:
 * _Start streaming data from vicon via UDP_: 
 On the Vicon PC run Programfiles/vicon/datastreamsdk/win64/ViconDataStreamSDK_Ctest.exe
 
+#Ball Trajectory Documentation
+## Samples
+The ball trajectory estimater has recorded samples. Each sample has three files
+### samplen.mat
+This file contains
+
+`points`: 300 ros objects
+`x_points`: 300 x coordinates
+`y_points`: 300 y coordinates
+`z_points`: 300 z coordinates
+`sample_time_rel`: 300 relative sample times 
+and figures of the trajectory as below
+![XZ_plane](/ball_trajectory/samples/s1_xz.jpg)
+![YZ_plane](/ball_trajectory/samples/s1_yz.jpg)
+
