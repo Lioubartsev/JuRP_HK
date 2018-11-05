@@ -105,11 +105,11 @@ The ball trajectory estimater has recorded samples. Each sample has three files
 This file contains:
 
 
-*`points`: 300 ros objects
-*`x_points`: 300 x coordinates
-*`y_points`: 300 y coordinates
-*`z_points`: 300 z coordinates
-*`sample_time_rel`: 300 relative sample times 
+* `points`: 300 ros objects
+* `x_points`: 300 x coordinates
+* `y_points`: 300 y coordinates
+* `z_points`: 300 z coordinates
+* `sample_time_rel`: 300 relative sample times 
 
 and figures of the trajectory as below
 
