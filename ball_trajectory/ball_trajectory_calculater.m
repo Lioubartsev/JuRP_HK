@@ -3,7 +3,7 @@ clear all
 clc
 
 %% Select the Ennvironment type
-DEV_ENVIRONMENT = 1;
+DEV_ENVIRONMENT = 0;
 DEV_SAMPLE = 2;
 
 if DEV_ENVIRONMENT
@@ -18,11 +18,10 @@ else
     disp("............")
     rosshutdown
     rosinit
-    rostopic list
-
-    rostopic info /object_update
-
-    ou = rossubscriber('/object_update')
+    %rostopic info /object_update
+    ou = rossubscriber('/object_update');
+    cr = rospublisher('/controller_reference','std_msgs/String');
+    reference_update_msg = rosmessage(cr);
 end
 
 x_points = [];
@@ -55,6 +54,7 @@ if DEV_ENVIRONMENT
     end
     data_array = i:i+50;
 else
+    fprintf("Waiting for throw...\n\n")
     data = receive(ou, 10);
     while(data.Objects.Z < z_threshold)
         data = receive(ou, 10);
@@ -72,7 +72,6 @@ for i = data_array
     if length(z_points)>1 && (data.Objects.Z - z_points(end)) < 0
         xz_max = x_points(end);
         yz_max = y_points(end);
-        
         break
     else
         x_points = [x_points data.Objects.X];
@@ -91,7 +90,7 @@ stop_ptr = numel(actual_x);
 
 
 %% Fit curve trajectory
-
+tic
 %Step 1: Reflect points about the maximum z-point
 [reflection_x, reflection_y, reflection_z] = Mirror(x_points, y_points, z_points, xz_max, yz_max);
 
@@ -131,24 +130,18 @@ if is_positive_direction_y
 else
     y_intersect = min(y_intersect);
 end
-
+toc
 fprintf('Predicted X-intercept: %g mm.\n', x_intersect);
 fprintf('Predicted Y-intercept: %g mm.\n\n', y_intersect);
 
+if DEV_ENVIRONMENT
+    % Do nothing
+else
+   reference_update_msg.Data = strcat(num2str(x_intersect), ';', num2str(y_intersect));
+   send(cr, reference_update_msg) 
+end
+toc
 %% Continue sampling the actual data points
-
-
-% if DEV_ENVIRONMENT
-% else   
-%     data = receive(ou, 10);
-%     while(data.Objects.Z >= z_intercept )
-%             actual_x = [actual_x data.Objects.X];
-%             actual_y = [actual_y data.Objects.Y];
-%             actual_z = [actual_z data.Objects.Z];
-% 
-%             data = receive(ou, 10);
-%     end
-% end
 
 if DEV_ENVIRONMENT
     i = data_array(end)-50;
@@ -163,8 +156,11 @@ if DEV_ENVIRONMENT
     end
 else
     data = receive(ou, 10);
-    while points(i).Objects.Z >= z_intercept
+    while data.Objects.Z >= z_intercept
         data = receive(ou, 10);
+        actual_x = [actual_x data.Objects.X];
+        actual_y = [actual_y data.Objects.Y];
+        actual_z = [actual_z data.Objects.Z];
     end
 end
 
@@ -276,5 +272,5 @@ plot(x1_yz_intercept, y1_yz_intercept, 'g')
 
 title('Predicted vs Actual YZ')
 legend('Rising edge', 'Predicted fall', 'Actual fall', 'Location', 'south')
-
+toc
 
