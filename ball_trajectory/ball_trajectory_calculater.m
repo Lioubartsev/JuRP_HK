@@ -4,7 +4,7 @@ clc
 
 %% Select the Ennvironment type
 DEV_ENVIRONMENT = 1;
-DEV_SAMPLE = 1;
+DEV_SAMPLE = 2;
 
 if DEV_ENVIRONMENT
     disp("RUNNING IN LOCAL ENVIRONMENT")
@@ -131,10 +131,9 @@ if is_positive_direction_y
 else
     y_intersect = min(y_intersect);
 end
-disp("Predicted X-intercept: ");
-x_intersect
-disp("Predicted Y-intercept: ");
-y_intersect
+
+fprintf('Predicted X-intercept: %g mm.\n', x_intersect);
+fprintf('Predicted Y-intercept: %g mm.\n\n', y_intersect);
 
 %% Continue sampling the actual data points
 
@@ -188,21 +187,16 @@ else
     y_intersect_actual = min(y_intersect_actual);
 end
 
-disp("Actual X-intercept: ");
-x_intersect_actual
-disp("Actual Y-intercept: ");
-y_intersect_actual
+fprintf('Actual X-intercept: %g mm.\n', x_intersect_actual);
+fprintf('Actual Y-intercept: %g mm.\n\n', y_intersect_actual);
 
-disp("Error in the x-prediction");
-abs(x_intersect - x_intersect_actual)
-disp("Error in the y-prediction");
-abs(y_intersect - y_intersect_actual)
+fprintf('Error in the x-prediction: %g mm.\n', abs(x_intersect - x_intersect_actual));
+fprintf('Error in the y-prediction: %g mm.\n\n', abs(y_intersect - y_intersect_actual));
 
 %% Plots
 figure
-% XZ
+%% XZ
 subplot(2, 3, 1)
-%plot(sample_x, sample_z, '+b')
 hold on
 grid on
 plot(x_points(1:stop_ptr), z_points(1:stop_ptr), '+r')
@@ -214,9 +208,8 @@ plot(x1_xz, y1_xz)
 title('XZ')
 legend('Actual points', 'Predicted fall', 'Location', 'south')
 
-% YZ
+%% YZ
 subplot(2, 3, 4)
-%plot(sample_y, sample_z, '+b')
 hold on
 grid on
 plot(y_points(1:stop_ptr), z_points(1:stop_ptr), '+r')
@@ -228,7 +221,7 @@ plot(x1_yz, y1_yz)
 title('YZ')
 legend('Actual points', 'Predicted fall', 'Location', 'south')
 
-% Actual XZ
+%% Actual XZ
 subplot(2, 3, 2)
 hold on
 grid on
@@ -241,9 +234,8 @@ plot(x1_xz_act, y1_xz_act)
 title('XZ actual data')
 legend('Actual points', 'Interpolated actual fall', 'Location', 'south')
 
-% Actual YZ
+%% Actual YZ
 subplot(2, 3, 5)
-%plot(sample_y, sample_z, '+b')
 hold on
 grid on
 plot(actual_y, actual_z, '+r')
@@ -255,7 +247,7 @@ plot(x1_yz_act, y1_yz_act)
 title('YZ actual data')
 legend('Actual points', 'Interpolated actual fall', 'Location', 'south')
 
-% Predicted over actual XZ
+%% Predicted over actual XZ
 subplot(2, 3, 3)
 hold on
 grid on
@@ -270,7 +262,7 @@ plot(x1_xz_intercept, y1_xz_intercept, 'g')
 title('Predicted vs Actual XZ')
 legend('Rising edge', 'Predicted fall', 'Actual fall', 'Location', 'south')
 
-% Predicted over actual YZ
+%% Predicted over actual YZ
 subplot(2, 3, 6)
 hold on
 grid on
