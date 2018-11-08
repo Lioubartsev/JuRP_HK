@@ -1,18 +1,27 @@
 # JuRP-HK Documentation
 ## GIT 101
+Git is a version-control program (Google documents for code). It enables multiple people working with and in the same files, simuntainously. Also, uploading to the cloud = backup. 
+### Alternative 1
+Use the web browser interface to upload files through drag&drop.
+### Alternative 2
+Install a client to use the terminal commands below. Example guide: [http://happygitwithr.com/install-git.html](http://happygitwithr.com/install-git.html)
 ```
 git clone <https://github.com/USERNAME/REPOSITORY.git
-git pull
 
 // First add the file to index
 git add <file>
 
-// Then merge all added files to a commit
-git commit -m <Commit note>
+// Then merge all added files to a commit with an *mandatory* message 
+git commit -m "The script now handles the X case"
 
 // At last upload to cloud
 git push
 
+// Download potential changes in the repository
+// and merges with local files. add + commit changes before doing this!
+git pull
+
+// Prints out current status of files and more..
 git status
 
 ```
