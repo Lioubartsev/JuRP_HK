@@ -16,6 +16,9 @@ context.z_threshold = 600;
 % At which height will end effector catch the ball? [mm]
 context.z_intercept = 600;
 
+% Plot the data ?
+context.plot = 0; 
+
 % Set up environment
 addpath(genpath(pwd));
 if context.DEV_ENVIRONMENT
@@ -38,13 +41,12 @@ end
 
 %% Track & predict landing
 
-[x_prediction, y_prediction] = ball_trajectory_calculater(context);
-
+[x_prediction, y_prediction, vx, vy, vz] = ball_trajectory_calculater(context);
+fprintf('Predicted landing [x, y] = [%g, %g] mm\n', x_prediction, y_prediction);
 %% Calculate arm trajectory
 
 %% Send control signal
 
-fprintf('Predicted landing [x, y] = [%g, %g] mm\n', x_prediction, y_prediction);
 % if DEV_ENVIRONMENT
 %     % Do nothing
 % else

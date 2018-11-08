@@ -1,4 +1,4 @@
-function [x_intersect, y_intersect] = ball_trajectory_calculater(context)
+function [x_intersect, y_intersect, vx, vy, vz] = ball_trajectory_calculater(context)
 
 
     if context.DEV_ENVIRONMENT
@@ -122,6 +122,25 @@ function [x_intersect, y_intersect] = ball_trajectory_calculater(context)
     %    send(cr, reference_update_msg) 
     % end
     toc
+    
+    %% Calculate catching velocity
+    %Assumption: No acceleration in the x or y direction.
+    %Air friction is negligible
+    
+    z_max =  max(z_points);
+    delta_x = (x_intersect - xz_max)/1000; %m 
+    delta_y = (y_intersect - yz_max)/1000; %m
+    delta_z = (z_max - context.z_intercept)/1000; %m
+    delta_t = sqrt(2*delta_z/9.81); %s
+ 
+    vx = delta_x/delta_t; %ms^-1
+    vy = delta_y/delta_t; %ms^-1
+    vz = 2*(-9.81)*delta_z; %ms^-1
+    
+    fprintf('Predicted X_velocity: %g m/s.\n', vx);
+    fprintf('Predicted Y_velocity: %g m/s.\n', vy);
+    fprintf('Predicted Z_velocity: %g m/s.\n', vz);
+    
     %% Continue sampling the actual data points
 
     if context.DEV_ENVIRONMENT
@@ -171,87 +190,90 @@ function [x_intersect, y_intersect] = ball_trajectory_calculater(context)
     fprintf('Error in the y-prediction: %g mm.\n\n', abs(y_intersect - y_intersect_actual));
 
     %% Plots
-    figure
-    %% XZ
-    subplot(2, 3, 1)
-    hold on
-    grid on
-    plot(x_points(1:stop_ptr), z_points(1:stop_ptr), '+r')
-
-    x1_xz = linspace(reflection_x(1), reflection_x(end), 1000);
-    y1_xz = polyval(fit_xz_reflection, x1_xz);
-    plot(x1_xz, y1_xz)
-
-    title('XZ')
-    legend('Actual points', 'Predicted fall', 'Location', 'south')
-
-    %% YZ
-    subplot(2, 3, 4)
-    hold on
-    grid on
-    plot(y_points(1:stop_ptr), z_points(1:stop_ptr), '+r')
-
-    x1_yz = linspace(reflection_y(1), reflection_y(end), 1000);
-    y1_yz = polyval(fit_yz_reflection, x1_yz);
-    plot(x1_yz, y1_yz)
-
-    title('YZ')
-    legend('Actual points', 'Predicted fall', 'Location', 'south')
-
-    %% Actual XZ
-    subplot(2, 3, 2)
-    hold on
-    grid on
-    plot(actual_x, actual_z, '+r')
-
-    x1_xz_act = linspace(actual_x(stop_ptr), actual_x(end), 1000);
-    y1_xz_act = polyval(fit_xz_actual, x1_xz_act);
-    plot(x1_xz_act, y1_xz_act)
-
-    title('XZ actual data')
-    legend('Actual points', 'Interpolated actual fall', 'Location', 'south')
-
-    %% Actual YZ
-    subplot(2, 3, 5)
-    hold on
-    grid on
-    plot(actual_y, actual_z, '+r')
-
-    x1_yz_act = linspace(actual_y(stop_ptr), actual_y(end), 1000);
-    y1_yz_act = polyval(fit_yz_actual, x1_yz_act);
-    plot(x1_yz_act, y1_yz_act)
-
-    title('YZ actual data')
-    legend('Actual points', 'Interpolated actual fall', 'Location', 'south')
-
-    %% Predicted over actual XZ
-    subplot(2, 3, 3)
-    hold on
-    grid on
-    plot(x_points(1:stop_ptr), z_points(1:stop_ptr), '+r')
-    plot(x1_xz, y1_xz)
-    plot(x1_xz_act, y1_xz_act)
-
-    x1_xz_intercept = min(actual_x):max(actual_x);
-    y1_xz_intercept = context.z_intercept * ones(numel(x1_xz_intercept), 1);
-    plot(x1_xz_intercept, y1_xz_intercept, 'g')
-
-    title('Predicted vs Actual XZ')
-    legend('Rising edge', 'Predicted fall', 'Actual fall', 'Location', 'south')
-
-    %% Predicted over actual YZ
-    subplot(2, 3, 6)
-    hold on
-    grid on
-    plot(y_points(1:stop_ptr), z_points(1:stop_ptr), '+r')
-    plot(x1_yz, y1_yz)
-    plot(x1_yz_act, y1_yz_act)
-
-    x1_yz_intercept = min(actual_y):max(actual_y);
-    y1_yz_intercept = context.z_intercept * ones(numel(x1_yz_intercept), 1);
-    plot(x1_yz_intercept, y1_yz_intercept, 'g')
-
-    title('Predicted vs Actual YZ')
-    legend('Rising edge', 'Predicted fall', 'Actual fall', 'Location', 'south')
-    toc
-
+    
+    if(context.plot)
+        
+        figure
+        %% XZ
+        subplot(2, 3, 1)
+        hold on
+        grid on
+        plot(x_points(1:stop_ptr), z_points(1:stop_ptr), '+r')
+        
+        x1_xz = linspace(reflection_x(1), reflection_x(end), 1000);
+        y1_xz = polyval(fit_xz_reflection, x1_xz);
+        plot(x1_xz, y1_xz)
+        
+        title('XZ')
+        legend('Actual points', 'Predicted fall', 'Location', 'south')
+        
+        %% YZ
+        subplot(2, 3, 4)
+        hold on
+        grid on
+        plot(y_points(1:stop_ptr), z_points(1:stop_ptr), '+r')
+        
+        x1_yz = linspace(reflection_y(1), reflection_y(end), 1000);
+        y1_yz = polyval(fit_yz_reflection, x1_yz);
+        plot(x1_yz, y1_yz)
+        
+        title('YZ')
+        legend('Actual points', 'Predicted fall', 'Location', 'south')
+        
+        %% Actual XZ
+        subplot(2, 3, 2)
+        hold on
+        grid on
+        plot(actual_x, actual_z, '+r')
+        
+        x1_xz_act = linspace(actual_x(stop_ptr), actual_x(end), 1000);
+        y1_xz_act = polyval(fit_xz_actual, x1_xz_act);
+        plot(x1_xz_act, y1_xz_act)
+        
+        title('XZ actual data')
+        legend('Actual points', 'Interpolated actual fall', 'Location', 'south')
+        
+        %% Actual YZ
+        subplot(2, 3, 5)
+        hold on
+        grid on
+        plot(actual_y, actual_z, '+r')
+        
+        x1_yz_act = linspace(actual_y(stop_ptr), actual_y(end), 1000);
+        y1_yz_act = polyval(fit_yz_actual, x1_yz_act);
+        plot(x1_yz_act, y1_yz_act)
+        
+        title('YZ actual data')
+        legend('Actual points', 'Interpolated actual fall', 'Location', 'south')
+        
+        %% Predicted over actual XZ
+        subplot(2, 3, 3)
+        hold on
+        grid on
+        plot(x_points(1:stop_ptr), z_points(1:stop_ptr), '+r')
+        plot(x1_xz, y1_xz)
+        plot(x1_xz_act, y1_xz_act)
+        
+        x1_xz_intercept = min(actual_x):max(actual_x);
+        y1_xz_intercept = context.z_intercept * ones(numel(x1_xz_intercept), 1);
+        plot(x1_xz_intercept, y1_xz_intercept, 'g')
+        
+        title('Predicted vs Actual XZ')
+        legend('Rising edge', 'Predicted fall', 'Actual fall', 'Location', 'south')
+        
+        %% Predicted over actual YZ
+        subplot(2, 3, 6)
+        hold on
+        grid on
+        plot(y_points(1:stop_ptr), z_points(1:stop_ptr), '+r')
+        plot(x1_yz, y1_yz)
+        plot(x1_yz_act, y1_yz_act)
+        
+        x1_yz_intercept = min(actual_y):max(actual_y);
+        y1_yz_intercept = context.z_intercept * ones(numel(x1_yz_intercept), 1);
+        plot(x1_yz_intercept, y1_yz_intercept, 'g')
+        
+        title('Predicted vs Actual YZ')
+        legend('Rising edge', 'Predicted fall', 'Actual fall', 'Location', 'south')
+        toc
+    end
