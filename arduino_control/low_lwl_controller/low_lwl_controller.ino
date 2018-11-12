@@ -15,12 +15,13 @@
 #include <AltSoftSerial.h>
 
 #include <ros.h>
-#include <std_msgs/Empty.h>
 #include <std_msgs/Int32.h>
 
 #define PWMPIN 3 //The pin that will be going to the driver.
 
 int32_t enc_count = 0;
+int32_t current_pos = 0;
+volatile int32_t reference_pos = 0;
 
 AltSoftSerial encoderSerial;
 
@@ -28,11 +29,11 @@ ros::NodeHandle  nh; //To communicate with ROS
 std_msgs::Int32 int_msg; //Type casting of the enc_count message
 
 
-void messageCb( const std_msgs::Empty& toggle_msg){
-  digitalWrite(13, HIGH-digitalRead(13));   // blink the led
+void updatereference_pos( const std_msgs::Int32& new_reference_pos_msg){
+  reference_pos = new_reference_pos_msg.data;
 }
 
-ros::Subscriber<std_msgs::Empty> sub("toggle_led", &messageCb );
+ros::Subscriber<std_msgs::Int32> sub("low_lwl_reference", &updatereference_pos);
 ros::Publisher arduino_printer("arduino_printer", &int_msg);
 
 void setup() {
@@ -51,19 +52,18 @@ void setup() {
   
   //Make pin the PWM output
   pinMode(PWMPIN, OUTPUT);
-
-  
 }
 
 void loop() {
   enc_count = encoderSerial.parseInt();
-  int_msg.data = enc_count;
+  //int_msg.data = enc_count;
+  //arduino_printer.publish(&int_msg);
+  //nh.spinOnce();
+  
+  current_pos = enc_count;//(abs(enc_count) % 256)
+  
+  //analogWrite(PWMPIN, P_controller(reference_pos, current_pos));
+  int_msg.data = P_controller(reference_pos, current_pos);
   arduino_printer.publish(&int_msg);
   nh.spinOnce();
-
-  
-  
-  analogWrite(PWMPIN, (abs(enc_count) % 256));
-  
-
 }
