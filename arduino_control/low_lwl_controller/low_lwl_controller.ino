@@ -1,24 +1,32 @@
-#include <SoftwareSerial.h>
+/*
+ * Version2 of "Controller with ROS" relies on 
+ * AltSoftSerial which is much faster than SoftwareSerial
+ * for HardwareSerial emulation. The downside is that
+ * you consume 1 timer for this, and depending on how
+ * ROS works there might not be enough timers for
+ * the PWM signal for the driver. Version1 failed to
+ * work with ROS probably because it was "too slow"
+ * - it used up too much time in the loop() that 
+ * "spinOnce()" isn't run often enough for ROS to
+ * be synchronised, but with AltSoftSerial it seems to be working.
+*/
+
+
+#include <AltSoftSerial.h>
+
 #include <ros.h>
 #include <std_msgs/Empty.h>
-//#include <std_msgs/String.h>
 #include <std_msgs/Int32.h>
 
-#define RX_pin 9  //RX is digital pin 9(connect to TX of other device)
-#define TX_pin 11  //TX is digital pin 11 (connect to RX of other device)
+#define PWMPIN 3 //The pin that will be going to the driver.
 
 int32_t enc_count = 0;
-int posDelta = 0;
-volatile int32_t compactMsg = 0;
-int msg = 0;
-int msgCheck = 0;
 
-SoftwareSerial encoderSerial(RX_pin, TX_pin);
+AltSoftSerial encoderSerial;
 
-ros::NodeHandle  nh;
+ros::NodeHandle  nh; //To communicate with ROS
+std_msgs::Int32 int_msg; //Type casting of the enc_count message
 
-//std_msgs::String str_msg;
-std_msgs::Int32 int_msg;
 
 void messageCb( const std_msgs::Empty& toggle_msg){
   digitalWrite(13, HIGH-digitalRead(13));   // blink the led
@@ -28,42 +36,34 @@ ros::Subscriber<std_msgs::Empty> sub("toggle_led", &messageCb );
 ros::Publisher arduino_printer("arduino_printer", &int_msg);
 
 void setup() {
+  //Set up the ROS
   nh.initNode();
   nh.subscribe(sub);
   nh.advertise(arduino_printer);
   
-  /*
-  //Set up the hardware serial for debugging
-  Serial.begin(9600); //for manual debugging, with no ROS
-  Serial.flush();*/
+  //Set up the AltSoftwareSerial
+  encoderSerial.begin(9600);
+  encoderSerial.flush();
   
-  // Set up the software serial
-  //encoderSerial.begin(9600);
-  //encoderSerial.flush();
+  //make sure that the AltSoftwareSerial pins are input
+  pinMode(8, INPUT);
+  pinMode(9, INPUT);
   
-  // Make sure that the software serial pins are input
-  pinMode(RX_pin, INPUT);
-  pinMode(TX_pin, INPUT);
-  
-  // Make pin 7 an input
-  pinMode(7, INPUT);
-  pinMode(13, OUTPUT);
+  //Make pin the PWM output
+  pinMode(PWMPIN, OUTPUT);
+
   
 }
 
 void loop() {
-  // The bit-shifting method
-  compactMsg = encoderSerial.parseInt();
-  enc_count = compactMsg>>10;
-  
-  enc_count = compactMsg;
-  //encoderSerial.flush();
-
-  // Prepare and send message to ROS
+  enc_count = encoderSerial.parseInt();
   int_msg.data = enc_count;
   arduino_printer.publish(&int_msg);
   nh.spinOnce();
+
   
-  delay(10);
+  
+  analogWrite(PWMPIN, (abs(enc_count) % 256));
+  
 
 }
