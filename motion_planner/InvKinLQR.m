@@ -1,14 +1,11 @@
 function [q_traj] = InvKinLQR(q,state_trgt)
-% INPUT: Current angles, Target state
-% OUTPUT: Reference trajectories for all three joints.
-%
-% INVKINLQR takes input as (CurrentAngles, TargetState) both entered as
-% 1x3 vectors and calculates the optimal trajectory for the end effector and
-% returns a 3xn matrix. Each row represents reference trajectory for one
-% joint (Shoulder;UpperArm;Elbow) and each column represents one iteration.
+% INPUT: Current angles [rad], Target state [m]. (Entered as 3x1 vectors.) 
+% OUTPUT: Reference trajectories for all three joints [rad]. 
+% Output is on the form (Shoulder;UpperArm;Elbow) 3xN matrix. N is the
+% number of iterations
 
-DEV_MODE.data = false;  % Run in development mode
-DEV_MODE.plot = false; % with plots
+DEV_MODE.data = 0; % Run in development mode
+DEV_MODE.plot = 0; % with plots
 
 % Inverse kinematics and LQ controller for JuRP-HK. The inverse kinematics
 % are solved numerically using the an altered version of the LM algorithm.
@@ -46,9 +43,9 @@ l3 = 0.4;
 %     0 0 0 1];
 
 % Translations for all links
-T1 = [1 0 0 0; 0 1 0 l1;0 0 1 0;0 0 0 1];
-T2 = [1 0 0 0; 0 1 0 l2;0 0 1 0;0 0 0 1];
-T3 = [1 0 0 0; 0 1 0 l3;0 0 1 0;0 0 0 1];
+T1 = [1 0 0 0; 0 1 0 l1; 0 0 1 0;0 0 0 1];
+T2 = [1 0 0 0; 0 1 0 l2; 0 0 1 0;0 0 0 1];
+T3 = [1 0 0 0; 0 1 0 l3; 0 0 1 0;0 0 0 1];
 
 % Homogenous transformation matrix from base to EE
 %H04 = @(theta1,theta2,theta3) Rx(theta1)*T1*Ry(theta2)*T2*Rx(theta3)*T3;
@@ -58,7 +55,9 @@ H04 = @(theta1,theta2,theta3) [1 0 0 0; 0 cos(theta1) -sin(theta1) 0;...
     0; 0 1 0 0; -sin(theta2) 0 cos(theta2) 0; 0 0 0 1]*T2*[1 0 0 0; 0 ...
     cos(theta3) -sin(theta3) 0; 0 sin(theta3) cos(theta3) 0; 0 0 0 1]*T3;
 
-H03 = @(theta1,theta2) Rx(theta1)*T1*Ry(theta2)*T2;
+H03 = @(theta1,theta2) [1 0 0 0; 0 cos(theta1) -sin(theta1) 0;...
+    0 sin(theta1) cos(theta1) 0; 0 0 0 1]*T1*[cos(theta2) 0 sin(theta2)...
+    0; 0 1 0 0; -sin(theta2) 0 cos(theta2) 0; 0 0 0 1]*T2;
 
 % Jacobian matrix
 % syms theta1 theta2 theta3 real
@@ -85,11 +84,11 @@ state_init = state;
 e = state_trgt - state;    % Error desried and actual pos
 
 % Maximum number of iterations
-maxIterations = 10000;
+maxIterations = 15000;
 iterations = 1;
 % Error tolerance for final EE pos norm [m]
 tolerance = 0.01;
-stepsize = 1/25;    % Error stepsize for linearization
+stepsize = 1/100;    % Error stepsize for linearization
 
 % Coordinate initiation
 x = zeros(1,maxIterations); y = zeros(1,maxIterations);
@@ -117,7 +116,7 @@ while norm(e) > tolerance
     H = H04(q(1),q(2),q(3));
     state = H(1:3,4);
     
-    if DEV_MODE.data == true
+    if DEV_MODE.data == 1
         % Save pos for plot later
         x(iterations) = state(1); y(iterations) = state(2);
         z(iterations) = state(3);
@@ -167,7 +166,7 @@ x = x(1:iterations-1); y = y(1:iterations-1); z = z(1:iterations-1);
 q_traj = q_traj(:,1:iterations-1);
 
 % EE travel distance
-if DEV_MODE.data == true
+if DEV_MODE.data == 1
     psum = 0; xsum = 0; ysum = 0; zsum = 0;
     
     for n = 1:length(x)-1
@@ -188,7 +187,7 @@ if DEV_MODE.data == true
     disp('--------------------------')
 end
 
-if DEV_MODE.plot == true
+if DEV_MODE.plot == 1
     % Plot/results section
     
     H3 = H03(q(1),q(2));
