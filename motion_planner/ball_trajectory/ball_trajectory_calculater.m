@@ -1,4 +1,4 @@
-function [x_intersect, y_intersect, vx, vy, vz] = ball_trajectory_calculater(context)
+function [x_intersect, y_intersect, vx, vy, vz, t_stamp] = ball_trajectory_calculater(context)
 
 
     if context.DEV_ENVIRONMENT
@@ -27,44 +27,93 @@ function [x_intersect, y_intersect, vx, vy, vz] = ball_trajectory_calculater(con
     % end
 
     %% Collect data points
-
+    tic
+    
     if context.DEV_ENVIRONMENT
         i = 1;
         while points(i).Objects.Z < context.z_threshold
             i = i + 1;
         end
-        data_array = i:i+50;
+        
+        %data_array = i:i+50;
+        data_ptr = i;
     else
         fprintf("Waiting for throw...\n\n")
+        data_ptr = 1;
         data = receive(context.ou, 10);
         while(data.Objects.Z < context.z_threshold)
             data = receive(context.ou, 10);
         end
-        data_array = 1:50;
+        %data_array = 1:50;
     end
-
-    for i = data_array
-        if context.DEV_ENVIRONMENT
-            data = points(i);
-        else
-            data = receive(context.ou, 10);
-        end
-
-        if length(z_points)>1 && (data.Objects.Z - z_points(end)) < 0
-            xz_max = x_points(end);
-            yz_max = y_points(end);
-            break
-        else
-            x_points = [x_points data.Objects.X];
-            y_points = [y_points data.Objects.Y];
-            z_points = [z_points data.Objects.Z];
+    
+    t_stamp = [];
+    
+    %Conventional method for calculating the projection
+    if context.Method == 1
+        data_array = data_ptr:data_ptr+50;
+        for i = data_array
+            if context.DEV_ENVIRONMENT
+                data = points(i);
+            else
+                data = receive(context.ou, 10);
+            end
             
-            %velocity attempt
-            %time = hat;
-            %diff = hat - time;
+            if length(z_points)>1 && (data.Objects.Z - z_points(end)) < 0
+                xz_max = x_points(end);
+                yz_max = y_points(end);
+                break
+            else
+                t_stamp = [t_stamp toc];
+                x_points = [x_points data.Objects.X];
+                y_points = [y_points data.Objects.Y];
+                z_points = [z_points data.Objects.Z];
+                
+            end
             
         end
-
+        
+    else
+    %Alternative mehod for calculating the projection
+    
+    vx = [];
+    vy = [];
+    vz = [];
+    
+    ax = [];
+    ay = [];
+    az = [];
+    
+    data_array = data_ptr:data_ptr+5;
+    
+        for i = data_array
+            j = i - data_ptr+1;
+            
+            if context.DEV_ENVIRONMENT
+                data = points(i);
+            else
+                data = receive(context.ou, 10);
+            end
+            t_stamp = [t_stamp toc];
+            x_points = [x_points data.Objects.X/1000];
+            y_points = [y_points data.Objects.Y/1000];
+            z_points = [z_points data.Objects.Z/1000];
+            
+            if j > 1
+                
+                vx = [vx (x_points(j)-x_points(j-1))/(t_stamp(j)-t_stamp(j-1))];
+                vy = [vy (y_points(j)-y_points(j-1))/(t_stamp(j)-t_stamp(j-1))];
+                vz = [vz (z_points(j)-z_points(j-1))/(t_stamp(j)-t_stamp(j-1))];
+            end
+            if j >2
+                ax =  [ax (vx(j-1)-vx(j-2))/(t_stamp(j)-t_stamp(j-2))];
+                ay =  [ay (vy(j-1)-vy(j-2))/(t_stamp(j)-t_stamp(j-2))];
+                az =  [az (vz(j-1)-vz(j-2))/(t_stamp(j)-t_stamp(j-2))];
+            end
+   
+        end
+        
+        
     end
 
     % Store a copy of the actual data points before manipulation
@@ -76,7 +125,7 @@ function [x_intersect, y_intersect, vx, vy, vz] = ball_trajectory_calculater(con
 
 
     %% Fit curve trajectory
-    tic
+
     %Step 1: Reflect points about the maximum z-point
     [reflection_x, reflection_y, reflection_z] = Mirror(x_points, y_points, z_points, xz_max, yz_max);
 
@@ -116,7 +165,7 @@ function [x_intersect, y_intersect, vx, vy, vz] = ball_trajectory_calculater(con
     else
         y_intersect = min(y_intersect);
     end
-    toc
+ 
     fprintf('Predicted X-intercept: %g mm.\n', x_intersect);
     fprintf('Predicted Y-intercept: %g mm.\n\n', y_intersect);
     
@@ -129,7 +178,6 @@ function [x_intersect, y_intersect, vx, vy, vz] = ball_trajectory_calculater(con
     %    reference_update_msg.Data = strcat(num2str(x_intersect), ';', num2str(y_intersect));
     %    send(cr, reference_update_msg) 
     % end
-    toc
     
     %% Calculate catching velocity
     %Assumption: No acceleration in the x or y direction.
@@ -283,5 +331,4 @@ function [x_intersect, y_intersect, vx, vy, vz] = ball_trajectory_calculater(con
         
         title('Predicted vs Actual YZ')
         legend('Rising edge', 'Predicted fall', 'Actual fall', 'Location', 'south')
-        toc
     end
