@@ -5,7 +5,7 @@ clear all
 clc
 
 % Run test with local sample?
-context.DEV_ENVIRONMENT = 0;
+context.DEV_ENVIRONMENT = 1;
 
 % (if running with local sample) Which?
 context.DEV_SAMPLE = 3;
@@ -15,6 +15,12 @@ context.z_threshold = 600;
 
 % At which height will end effector catch the ball? [mm]
 context.z_intercept = 600;
+
+%Which method to use for calculating the projection )
+%Method 1: Wait till we reach the maximum point then calculate.
+%Method 2: Calculate the projection using a timer and velocities.
+context.Method = 2;
+
 
 % Verbose mode? plot and and more..
 context.DEV_MODE = 0; 
@@ -41,14 +47,14 @@ end
 
 %% Track & predict landing
 
-[x_prediction, y_prediction, vx, vy, vz] = ball_trajectory_calculater(context);
+[x_prediction, y_prediction, vx, vy, vz, t_stamp] = ball_trajectory_calculater(context);
 fprintf('Predicted landing [x, y] = [%g, %g] mm\n', x_prediction, y_prediction);
 %% Calculate arm trajectory
 q = [-0.1 0 0]';
 state_trgt = [0 0.5 0]';
 
 [q_traj] = InvKinLQR(q, state_trgt);
-toc
+
 %% Send control signal
 
 % if DEV_ENVIRONMENT
