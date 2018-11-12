@@ -1,13 +1,11 @@
 function [q_traj] = InvKinLQR(q,state_trgt)
-% INPUT: Current angles, Target state
-% OUTPUT: Reference trajectories for all three joints.
-%
-% INVKINLQR takes input as (CurrentAngles, TargetState) both entered as
-% 1x3 vectors and calculates the optimal trajectory for the end effector and
-% returns a 3xn matrix. Each row represents reference trajectory for one
-% joint (Shoulder;UpperArm;Elbow) and each column represents one iteration.
+% INPUT: Current angles [rad], Target state [m]. (Entered as 3x1 vectors.) 
+% OUTPUT: Reference trajectories for all three joints [rad]. 
+% Output is on the form (Shoulder;UpperArm;Elbow) 3xN matrix. N is the
+% number of iterations
 
-DEV_MODE = true; % Run in development mode
+DEV_MODE.data = 0; % Run in development mode
+DEV_MODE.plot = 0; % with plots
 
 % Inverse kinematics and LQ controller for JuRP-HK. The inverse kinematics
 % are solved numerically using the an altered version of the LM algorithm.
@@ -26,32 +24,40 @@ l1 = 0.2;
 l2 = 0.2;
 l3 = 0.4;
 
-% Rotation matrix around x axis of the base
-Rx = @(theta) [1 0 0 0
-    0 cos(theta) -sin(theta) 0
-    0 sin(theta) cos(theta) 0
-    0 0 0 1];
-
-% Rotation matrix around y axis of the base
-Ry = @(theta) [cos(theta) 0 sin(theta) 0
-    0 1 0 0
-    -sin(theta) 0 cos(theta) 0
-    0 0 0 1];
-
-% Translation matrix
-T = @(l) [1 0 0 0
-    0 1 0 l
-    0 0 1 0
-    0 0 0 1];
+% % Rotation matrix around x axis of the base
+% Rx = @(theta) [1 0 0 0
+%     0 cos(theta) -sin(theta) 0
+%     0 sin(theta) cos(theta) 0
+%     0 0 0 1];
+% 
+% % Rotation matrix around y axis of the base
+% Ry = @(theta) [cos(theta) 0 sin(theta) 0
+%     0 1 0 0
+%     -sin(theta) 0 cos(theta) 0
+%     0 0 0 1];
+% 
+% % Translation matrix
+% T = @(l) [1 0 0 0
+%     0 1 0 l
+%     0 0 1 0
+%     0 0 0 1];
 
 % Translations for all links
-T1 = T(l1);
-T2 = T(l2);
-T3 = T(l3);
+T1 = [1 0 0 0; 0 1 0 l1; 0 0 1 0;0 0 0 1];
+T2 = [1 0 0 0; 0 1 0 l2; 0 0 1 0;0 0 0 1];
+T3 = [1 0 0 0; 0 1 0 l3; 0 0 1 0;0 0 0 1];
 
 % Homogenous transformation matrix from base to EE
-H04 = @(theta1,theta2,theta3) Rx(theta1)*T1*Ry(theta2)*T2*Rx(theta3)*T3;
-H03 = @(theta1,theta2) Rx(theta1)*T1*Ry(theta2)*T2;
+%H04 = @(theta1,theta2,theta3) Rx(theta1)*T1*Ry(theta2)*T2*Rx(theta3)*T3;
+
+H04 = @(theta1,theta2,theta3) [1 0 0 0; 0 cos(theta1) -sin(theta1) 0;...
+    0 sin(theta1) cos(theta1) 0; 0 0 0 1]*T1*[cos(theta2) 0 sin(theta2)...
+    0; 0 1 0 0; -sin(theta2) 0 cos(theta2) 0; 0 0 0 1]*T2*[1 0 0 0; 0 ...
+    cos(theta3) -sin(theta3) 0; 0 sin(theta3) cos(theta3) 0; 0 0 0 1]*T3;
+
+H03 = @(theta1,theta2) [1 0 0 0; 0 cos(theta1) -sin(theta1) 0;...
+    0 sin(theta1) cos(theta1) 0; 0 0 0 1]*T1*[cos(theta2) 0 sin(theta2)...
+    0; 0 1 0 0; -sin(theta2) 0 cos(theta2) 0; 0 0 0 1]*T2;
 
 % Jacobian matrix
 % syms theta1 theta2 theta3 real
@@ -65,36 +71,6 @@ J = @(theta1,theta2,theta3)reshape([0.0,-sin(theta1)-cos(theta3).*...
     -cos(theta1).*sin(theta3)-cos(theta2).*cos(theta3).*sin(theta1),...
     -sin(theta1).*sin(theta3)+cos(theta1).*cos(theta2).*cos(theta3)],[3,3]);
 
-% --- ROS part ---
-% if ROS_MODE == true
-%     rosshutdown
-%     rosinit
-%
-%     % Create ROS node
-%     node = robotics.ros.Node('/controller');
-%
-%     % Define message type
-%     msg_type = 'std_msgs/Float64MultiArray';
-%
-%     % Topic definiton
-%     topicPub = ["/Shoulder", "/UpperArm", "/Elbow"];
-%     topicSub = ["/State", "StateTrgt"];
-%
-%     % Publish setup for Node
-%     for topic = topicPub
-%         pub = robotics.ros.Publisher(node,topic,msg_type);
-%     end
-%
-%     for topiv = topicSub
-%         sub = robotics.ros.Subscriber(node,topic,msg_type);
-%     end
-%
-%     % Define messages
-%     msgShoulder = rosmessage(msg_type);
-%     msgUpperArm = rosmessage(msg_type);
-%     msgElbow    = rosmessage(msg_type);
-%
-% end
 % --- optimization part ---
 
 % init for state ([x y z])
@@ -108,10 +84,11 @@ state_init = state;
 e = state_trgt - state;    % Error desried and actual pos
 
 % Maximum number of iterations
-maxIterations = 25000;
+maxIterations = 15000;
 iterations = 1;
 % Error tolerance for final EE pos norm [m]
-tolerance = 0.005;
+tolerance = 0.01;
+stepsize = 1/100;    % Error stepsize for linearization
 
 % Coordinate initiation
 x = zeros(1,maxIterations); y = zeros(1,maxIterations);
@@ -128,10 +105,10 @@ z = zeros(1,maxIterations); q_traj = zeros(3,maxIterations);
 We = diag([1 3 2]);
 % Damping factor init. Updated in the loop as a function of the error.
 % Wn0 specifies weights for joint usage [Shoulder, upper arm, elbow]
-Wn0 = diag([1 1 1]);
+Wn0 = diag(1.4*[1 1 1]);
 % Joint limits (upper bound = lower bound) and joint limit weight
 JointLim = deg2rad([95 45 110]'); % [Shoulder, upper arm, elbow]
-Wl = diag([1 1 1]);
+Wl = diag(10*[1 1 1]);
 
 while norm(e) > tolerance
     
@@ -139,7 +116,7 @@ while norm(e) > tolerance
     H = H04(q(1),q(2),q(3));
     state = H(1:3,4);
     
-    if DEV_MODE == true
+    if DEV_MODE.data == 1
         % Save pos for plot later
         x(iterations) = state(1); y(iterations) = state(2);
         z(iterations) = state(3);
@@ -152,7 +129,6 @@ while norm(e) > tolerance
     %E = 0.5*diag(e')*We*diag(e);
     E = 0.5*e'*We*e*Wn0;
     Wn =  E + 2.5e-5*eye(3); % Wn = E + Wn_bias
-    
     % ---------- Angle iteration ----------
     
     % Newton Raphson
@@ -166,7 +142,7 @@ while norm(e) > tolerance
     % Levenberg Marquardt
     lim = (diag(JointLim - abs(q)))'*Wl*(diag(JointLim - abs(q)));
     Hj = Jacobian'*We*Jacobian + Wn + lim^-1;
-    gk = Jacobian'*We*((state_trgt-state)/100);
+    gk = Jacobian'*We*((state_trgt-state)*stepsize);
     q = q + Hj^-1*gk;    % q(k+1) = q(k) + (J'We + Wn + lim^-1)^-1*J'We*e
     
     % q = q + (Jacobian'*We*Jacobian + Wn + ((diag(JointLim - abs(q)))'...
@@ -190,7 +166,7 @@ x = x(1:iterations-1); y = y(1:iterations-1); z = z(1:iterations-1);
 q_traj = q_traj(:,1:iterations-1);
 
 % EE travel distance
-if DEV_MODE == true
+if DEV_MODE.data == 1
     psum = 0; xsum = 0; ysum = 0; zsum = 0;
     
     for n = 1:length(x)-1
@@ -200,6 +176,18 @@ if DEV_MODE == true
         zsum = zsum + abs(z(n+1) - z(n));
     end
     
+    disp(['Distance from goal: ',num2str(round(1000*norm(e),3)), ' mm'])
+    disp(['Iterations: ', num2str(iterations-1)])
+    disp(['Final EE pos: [',num2str([x(end),y(end),z(end)]), '] m'])
+    disp(['Q: [',num2str(q'), '] rad'])
+    disp(['EE travel distance: ', num2str(psum), ' m ...'])
+    disp(['... in x ',num2str(xsum), ' m'])
+    disp(['... in y ',num2str(ysum), ' m'])
+    disp(['... in z ',num2str(zsum), ' m'])
+    disp('--------------------------')
+end
+
+if DEV_MODE.plot == 1
     % Plot/results section
     
     H3 = H03(q(1),q(2));
@@ -259,16 +247,6 @@ if DEV_MODE == true
     title('Angle reference for all joints')
     ylabel('Angle [deg]')
     xlabel('Iterations')
-    
-    disp(['Distance from goal: ',num2str(round(1000*norm(e),3)), ' mm'])
-    disp(['Iterations: ', num2str(iterations-1)])
-    disp(['Final EE pos: [',num2str([x(end),y(end),z(end)]), '] m'])
-    disp(['Q: [',num2str(q'), '] rad'])
-    disp(['EE travel distance: ', num2str(psum), ' m ...'])
-    disp(['... in x ',num2str(xsum), ' m'])
-    disp(['... in y ',num2str(ysum), ' m'])
-    disp(['... in z ',num2str(zsum), ' m'])
-    disp('--------------------------')
 end
 % TODO:
 % - Needs citing/ references in order to make report writing easier.
