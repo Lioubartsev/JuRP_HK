@@ -8,7 +8,7 @@ clc
 context.DEV_ENVIRONMENT = 0;
 
 % (if running with local sample) Which?
-context.DEV_SAMPLE = 2;
+context.DEV_SAMPLE = 3;
 
 % At which height is the ball considered "in the air"? [mm]
 context.z_threshold = 600;
@@ -16,8 +16,8 @@ context.z_threshold = 600;
 % At which height will end effector catch the ball? [mm]
 context.z_intercept = 600;
 
-% Plot the data ?
-context.plot = 0; 
+% Verbose mode? plot and and more..
+context.DEV_MODE = 0; 
 
 % Set up environment
 addpath(genpath(pwd));
@@ -44,7 +44,11 @@ end
 [x_prediction, y_prediction, vx, vy, vz] = ball_trajectory_calculater(context);
 fprintf('Predicted landing [x, y] = [%g, %g] mm\n', x_prediction, y_prediction);
 %% Calculate arm trajectory
+q = [-0.1 0 0]';
+state_trgt = [0 0.5 0]';
 
+[q_traj] = InvKinLQR(q, state_trgt);
+toc
 %% Send control signal
 
 % if DEV_ENVIRONMENT

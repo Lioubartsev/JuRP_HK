@@ -58,6 +58,11 @@ function [x_intersect, y_intersect, vx, vy, vz] = ball_trajectory_calculater(con
             x_points = [x_points data.Objects.X];
             y_points = [y_points data.Objects.Y];
             z_points = [z_points data.Objects.Z];
+            
+            %velocity attempt
+            %time = hat;
+            %diff = hat - time;
+            
         end
 
     end
@@ -114,7 +119,10 @@ function [x_intersect, y_intersect, vx, vy, vz] = ball_trajectory_calculater(con
     toc
     fprintf('Predicted X-intercept: %g mm.\n', x_intersect);
     fprintf('Predicted Y-intercept: %g mm.\n\n', y_intersect);
-
+    
+    x_intersect = x_intersect/1000;
+    y_intersect = y_intersect/1000;
+    
     % if DEV_ENVIRONMENT
     %     % Do nothing
     % else
@@ -191,7 +199,7 @@ function [x_intersect, y_intersect, vx, vy, vz] = ball_trajectory_calculater(con
 
     %% Plots
     
-    if(context.plot)
+    if(context.DEV_MODE)
         
         figure
         %% XZ
