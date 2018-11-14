@@ -1,26 +1,17 @@
-/*
- * Version2 of "Controller with ROS" relies on 
- * AltSoftSerial which is much faster than SoftwareSerial
- * for HardwareSerial emulation. The downside is that
- * you consume 1 timer for this, and depending on how
- * ROS works there might not be enough timers for
- * the PWM signal for the driver. Version1 failed to
- * work with ROS probably because it was "too slow"
- * - it used up too much time in the loop() that 
- * "spinOnce()" isn't run often enough for ROS to
- * be synchronised, but with AltSoftSerial it seems to be working.
-*/
-
-
 #include <AltSoftSerial.h>
 
 #include <ros.h>
 #include <std_msgs/Int32.h>
 
-#define PWMPIN 3 //The pin that will be going to the driver.
+#define PWM_VALUE_PIN 3 // Value of PWM to driver
+#define PWM_DIR_PIN 5 // Direction of PWM to driver
+#define PWM_POSITIVE_DIR HIGH
+#define PWM_NEGATIVE_DIR LOW
 
 int32_t enc_count = 0;
 int32_t current_pos = 0;
+int32_t u = 0;
+int32_t new_pwm = 0;
 volatile int32_t reference_pos = 0;
 
 AltSoftSerial encoderSerial;
@@ -29,8 +20,8 @@ ros::NodeHandle  nh; //To communicate with ROS
 std_msgs::Int32 int_msg; //Type casting of the enc_count message
 
 
-void updatereference_pos( const std_msgs::Int32& new_reference_pos_msg){
-  reference_pos = new_reference_pos_msg.data;
+void updatereference_pos( const std_msgs::Int32& new_reference_deg_msg){
+  reference_pos = 2305/360 * new_reference_deg_msg.data; // 2305 counts/rev with input in degrees
 }
 
 ros::Subscriber<std_msgs::Int32> sub("low_lwl_reference", &updatereference_pos);
@@ -60,10 +51,22 @@ void loop() {
   //arduino_printer.publish(&int_msg);
   //nh.spinOnce();
   
-  current_pos = enc_count;//(abs(enc_count) % 256)
+  current_pos = enc_count;
   
-  //analogWrite(PWMPIN, P_controller(reference_pos, current_pos));
-  int_msg.data = P_controller(reference_pos, current_pos);
+  u = P_controller(reference_pos, current_pos);
+  new_pwm = u_to_pwm(u);
+
+  // Set direction of rotation to driver
+  if(new_pwm >= 0) {
+    analogWrite(PWM_DIR_PIN, PWM_POSITIVE_DIR);
+  } else {
+    analogWrite(PWM_DIR_PIN, PWM_NEGATIVE_DIR);
+  }
+
+  // Set value of PWM to driver
+  analogWrite(PWM_VALUE_PIN, abs(new_pwm));
+
+  int_msg.data = u;
   arduino_printer.publish(&int_msg);
   nh.spinOnce();
 }
