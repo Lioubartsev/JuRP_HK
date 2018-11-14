@@ -4,8 +4,8 @@ function [q_traj] = InvKinLQR(q,state_trgt)
 % Output is on the form (Shoulder;UpperArm;Elbow) 3xN matrix. N is the
 % number of iterations
 
-DEV_MODE.data = 0; % Run in development mode
-DEV_MODE.plot = 0; % with plots
+DEV_MODE.data = 1; % Run in development mode
+DEV_MODE.plot = 1; % with plots
 
 % Inverse kinematics and LQ controller for JuRP-HK. The inverse kinematics
 % are solved numerically using the an altered version of the LM algorithm.
@@ -88,7 +88,7 @@ maxIterations = 15000;
 iterations = 1;
 % Error tolerance for final EE pos norm [m]
 tolerance = 0.01;
-stepsize = 1/100;    % Error stepsize for linearization
+stepsize = 1/25;    % Error stepsize for linearization
 
 % Coordinate initiation
 x = zeros(1,maxIterations); y = zeros(1,maxIterations);
@@ -248,7 +248,3 @@ if DEV_MODE.plot == 1
     ylabel('Angle [deg]')
     xlabel('Iterations')
 end
-% TODO:
-% - Needs citing/ references in order to make report writing easier.
-% - fix error so that we can punish big angle changes
-% - chech bryson for Wn
