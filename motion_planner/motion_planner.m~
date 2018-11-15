@@ -11,25 +11,21 @@ context.DEV_ENVIRONMENT = 0;
 context.DEV_SAMPLE = 3;
 
 % At which height is the ball considered "in the air"? [mm]
-context.z_threshold = 0.6;
+context.z_threshold = 600;
 
 % At which height will end effector catch the ball? [mm]
-context.z_intercept = 0.6;
+context.z_intercept = 600;
 
 %Which method to use for calculating the projection )
 % Method 1: Wait till we reach the maximum point then calculate.
-% Method 2: Calculate the projection using a timer and velocities. based on
+% Method 2: Calculate the projection using a timer and velocities.
+% Method 3: Calculate the projection using a timer and velocities. based on
 %           n points
-context.method = 2;
+context.Method = 2;
 
-% Sampling frequency
-context.fs = 100;
-
-% Sample length for Method 2
-context.length_sample = 20;
 
 % Verbose mode? plot and and more..
-context.DEV_MODE = 1; 
+context.DEV_MODE = 0; 
 
 % Set up environment
 addpath(genpath(pwd));
@@ -53,8 +49,8 @@ end
 % Performed manually
 
 %% Track & predict landing
-tic
-[x_prediction, y_prediction, v_z] = ball_trajectory_calculater(context);
+
+[x_prediction, y_prediction, vx, vy, vz, t_stamp] = ball_trajectory_calculater(context);
 %fprintf('Predicted landing [x, y] = [%g, %g] mm\n', x_prediction, y_prediction);
 %% Calculate arm trajectory
 q = [-0.1 0 0]';
