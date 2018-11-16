@@ -6,7 +6,7 @@ Use the web browser interface to upload files through drag&drop.
 ### Alternative 2
 Install a client to use the terminal commands below. Example guide: [http://happygitwithr.com/install-git.html](http://happygitwithr.com/install-git.html)
 ```
-git clone <https://github.com/USERNAME/REPOSITORY.git
+git clone https://github.com/fschalling/JuRP_HK.git
 
 // First add the file to index
 git add <file>
@@ -14,10 +14,10 @@ git add <file>
 // Then merge all added files to a commit with an *mandatory* message 
 git commit -m "The script now handles the X case"
 
-// At last upload to cloud
+// At last, upload to cloud
 git push
 
-// Download potential changes in the repository
+// Download changes in the repository
 // and merges with local files. add + commit changes before doing this!
 git pull
 
@@ -25,6 +25,12 @@ git pull
 git status
 
 ```
+## Start the software
+1. On VICON_PC: Run *Vicon Tracker*
+2. On VICON_PC: Run *C:\Program Files\Vicon\DataStream SDK\Win64\C\ViconDataStreamSDK_CTest.exe*
+3. On USER_PC: Run *vicon_control/start*
+4. On USER_PC: in *vicon_control.perspective - rqt* check *Markers* and then *Connect*
+5. On USER_PC: Run *repos/JuRP_HK/motion_planner/motion_planner.m*
 
 ## Useful commands
 * Add setup-file to the terminal's environment variables (here setup.bash for ROS Kinetic)
