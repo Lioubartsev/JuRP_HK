@@ -1,11 +1,11 @@
-function [q_traj] = InvKinLQR(q,state_trgt)
+function [q_traj] = InvKinLQR(q,state_trgt,context)
 % INPUT: Current angles [rad], Target state [m]. (Entered as 3x1 vectors.) 
 % OUTPUT: Reference trajectories for all three joints [rad]. 
 % Output is on the form (Shoulder;UpperArm;Elbow) 3xN matrix. N is the
 % number of iterations
 
-DEV_MODE.data = 1; % Run in development mode
-DEV_MODE.plot = 1; % with plots
+% DEV_MODE.data = 1; % Run in development mode
+% DEV_MODE.plot = 1; % with plots
 
 % Inverse kinematics and LQ controller for JuRP-HK. The inverse kinematics
 % are solved numerically using the an altered version of the LM algorithm.
@@ -98,7 +98,7 @@ z = zeros(1,maxIterations); q_traj = zeros(3,maxIterations);
 
 % --- Weights and constraints ---
 % Error weight, specifies what error is prioritized to minimize [x y z]
-We = diag([2 2 1]);
+We = diag([1 1 1]);
 % Damping factor init. Updated in the loop as a function of the error.
 % Wn0 specifies weights for joint usage [Shoulder, upper arm, elbow]
 Wn0 = diag(1.4*[1 1 1]);
@@ -112,7 +112,7 @@ while norm(e) > tolerance
     H = H04(q(1),q(2),q(3));
     state = H(1:3,4);
     
-    if DEV_MODE.data == 1
+    if context.DEV_MODE.plot == 1 || context.DEV_MODE.data == 1
         % Save pos for plot later
         x(iterations) = state(1); y(iterations) = state(2);
         z(iterations) = state(3);
@@ -162,7 +162,7 @@ x = x(1:iterations-1); y = y(1:iterations-1); z = z(1:iterations-1);
 q_traj = q_traj(:,1:iterations-1);
 
 % EE travel distance
-if DEV_MODE.data == 1
+if context.DEV_MODE.data == 1
     psum = 0; xsum = 0; ysum = 0; zsum = 0;
     
     for n = 1:length(x)-1
@@ -183,8 +183,8 @@ if DEV_MODE.data == 1
     disp('--------------------------')
 end
 
-if DEV_MODE.plot == 1
-    % Plot/results section
+% ----------- Plot/results section -----------
+if context.DEV_MODE.plot == 1
     
     H3 = H03(q(1),q(2));
     elbowPos = H3(1:3,4);
