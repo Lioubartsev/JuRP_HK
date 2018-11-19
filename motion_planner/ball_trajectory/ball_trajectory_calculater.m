@@ -1,4 +1,4 @@
-function [x_intersect_med, y_intersect_med, v_z] = ball_trajectory_calculater(context)
+function [x_intersect, y_intersect] = ball_trajectory_calculater(context)
 
 
     if context.DEV_ENVIRONMENT
@@ -42,8 +42,8 @@ function [x_intersect_med, y_intersect_med, v_z] = ball_trajectory_calculater(co
         %data_array = 1:50;
     end
     
-    %t0 = datenummx(clock);
-    %t_stamp = [];
+    t0 = datenummx(clock);
+    t_stamp = [];
     
     %Method 1
     if context.method == 1
@@ -106,22 +106,27 @@ function [x_intersect_med, y_intersect_med, v_z] = ball_trajectory_calculater(co
                 vy(j-1) = (y_points(j)-y_points(j-1))*context.fs;
                 us(j-1) = 1/context.fs*i*9.81+(z_points(j)-z_points(j-1))*context.fs;
                 
-                v_average_x = mean(vx);
-                v_average_y = mean(vy);
-                v_average_z = mean(us);
+%                 v_average_x = mean(vx);
+%                 v_average_y = mean(vy);
+%                 v_average_z = mean(us);
                 
-                v_median_x = median(vx(end-5:end));
-                v_median_y = median(vy(end-5:end));
-                v_median_z = median(us(end-5:end));
+%                 v_median_x = median(vx(end-5:end));
+%                 v_median_y = median(vy(end-5:end));
+%                 v_median_z = median(us(end-5:end));
                 
                 %delta_t = [delta_t t_stamp(j)-t_stamp(j-1)];
              end
         end
+        
+        v_median_x = median(vx);
+        v_median_y = median(vy);
+        v_median_z = median(us);
+        
+        g = -9.81;
+        %z_max_average = -v_average_z^2/(2*g)+z_points(1)
+        z_max_median = -v_median_z^2/(2*g)+z_points(1)
     end
-    
-    g = -9.81;
-    z_max = -v_average_z^2/(2*g)+z_points(1)
-    z_max = -v_median_z^2/(2*g)+z_points(1)
+
     % Store a copy of the actual data points before manipulation
     actual_x = x_points;
     actual_y = y_points;
@@ -205,15 +210,17 @@ function [x_intersect_med, y_intersect_med, v_z] = ball_trajectory_calculater(co
        g = -9.81;
        z_delta = context.z_threshold - z_points(1);
        
-       t_end = max(roots([1 2/g*v_average_z -(2/g)*z_delta]));
-       t_end_med = max(roots([1 2/g*v_median_z -(2/g)*z_delta]));
+       %t_end = max(roots([1 2/g*v_average_z -(2/g)*z_delta]));
+       t_end = max(roots([1 2/g*v_median_z -(2/g)*z_delta]));
 
-       x_intersect = v_average_x * t_end + x_points(1);
-       y_intersect = v_average_y * t_end + y_points(1) ;
+       %x_intersect = v_average_x * t_end + x_points(1);
+       %y_intersect = v_average_y * t_end + y_points(1) ;
        
-       x_intersect_med = v_median_x * t_end_med + x_points(1) ;
-       y_intersect_med = v_median_y * t_end_med + y_points(1) ;
+       x_intersect = v_median_x * t_end + x_points(1) ;
+       y_intersect = v_median_y * t_end + y_points(1) ;
        
+       % Calculate catching velocity
+       v_z = sqrt(v_median_z^2 + (2)*(g)*(z_delta));
     end
     
     % if DEV_ENVIRONMENT
@@ -222,14 +229,11 @@ function [x_intersect_med, y_intersect_med, v_z] = ball_trajectory_calculater(co
     %    reference_update_msg.Data = strcat(num2str(x_intersect), ';', num2str(y_intersect));
     %    send(cr, reference_update_msg) 
     % end
-    
-    %% Calculate catching velocity
-    
-    v_z = sqrt(v_median_z^2 + (2)*(g)*(z_delta));
+ 
     
     %% Continue sampling the actual data points
 
-    if context.DEV_MODE
+    %if context.DEV_MODE
             
         if context.DEV_ENVIRONMENT
             i = data_array(end)-50;
@@ -275,34 +279,32 @@ function [x_intersect_med, y_intersect_med, v_z] = ball_trajectory_calculater(co
         else
             y_intersect_actual = min(y_intersect_actual);
         end
-    
-
         
         %Print values on the screen
         
-        fprintf('Predicted X-intercept using average: %g m.\n', x_intersect);
-        fprintf('Predicted Y-intercept using average: %g m.\n\n', y_intersect);
+        %fprintf('Predicted X-intercept using average: %g m.\n', x_intersect);
+        %fprintf('Predicted Y-intercept using average: %g m.\n\n', y_intersect);
         
-        fprintf('Predicted X-intecept using median: %g m.\n', x_intersect_med);
-        fprintf('Predicted Y-intercept using median: %g m.\n\n', y_intersect_med);
+        fprintf('Predicted X-intecept using median: %g m.\n', x_intersect);
+        fprintf('Predicted Y-intercept using median: %g m.\n\n', y_intersect);
         
         fprintf('Actual X-intercept: %g m.\n', x_intersect_actual);
         fprintf('Actual Y-intercept: %g m.\n\n', y_intersect_actual);
         
-        fprintf('Error in the x-prediction using average: %g m.\n', abs(x_intersect - x_intersect_actual));
-        fprintf('Error in the y-prediction using average: %g m.\n\n', abs(y_intersect - y_intersect_actual));
+        %fprintf('Error in the x-prediction using average: %g m.\n', abs(x_intersect - x_intersect_actual));
+        %fprintf('Error in the y-prediction using average: %g m.\n\n', abs(y_intersect - y_intersect_actual));
         
-        fprintf('Error in the x-prediction using median: %g m.\n', abs(x_intersect_med - x_intersect_actual));
-        fprintf('Error in the y-prediction using median: %g m.\n\n', abs(y_intersect_med - y_intersect_actual));
+        fprintf('Error in the x-prediction using median: %g cm.\n', abs(x_intersect - x_intersect_actual)*100);
+        fprintf('Error in the y-prediction using median: %g cm.\n\n', abs(y_intersect - y_intersect_actual)*100);
     
-    end
+    %end
 
     %% Plots
     
     if context.DEV_MODE
         
         if context.method == 1
-        
+            
             figure
             %% XZ
             subplot(2, 3, 1)
@@ -332,17 +334,21 @@ function [x_intersect_med, y_intersect_med, v_z] = ball_trajectory_calculater(co
         else
             %Do Nothing
         end
-            
+          
+         actual_x = actual_x * 100;
+         actual_y = actual_y * 100;
+         actual_z = actual_z * 100;
+        
         %% Actual XZ
         subplot(2, 3, 2)
         hold on
         grid on
         plot(actual_x, actual_z, '+r')
         
-        x1_xz_act = linspace(actual_x(stop_ptr), actual_x(end), 1000);
-        y1_xz_act = polyval(fit_xz_actual, x1_xz_act);
-        plot(x1_xz_act, y1_xz_act)
-        
+%         x1_xz_act = linspace(actual_x(stop_ptr), actual_x(end), 1000);
+%         y1_xz_act = polyval(fit_xz_actual, x1_xz_act);
+%         plot(x1_xz_act, y1_xz_act)
+%         
         title('XZ actual data')
         legend('Actual points', 'Interpolated actual fall', 'Location', 'south')
         
@@ -351,11 +357,11 @@ function [x_intersect_med, y_intersect_med, v_z] = ball_trajectory_calculater(co
         hold on
         grid on
         plot(actual_y, actual_z, '+r')
-        
-        x1_yz_act = linspace(actual_y(stop_ptr), actual_y(end), 1000);
-        y1_yz_act = polyval(fit_yz_actual, x1_yz_act);
-        plot(x1_yz_act, y1_yz_act)
-        
+%         
+%         x1_yz_act = linspace(actual_y(stop_ptr), actual_y(end), 1000);
+%         y1_yz_act = polyval(fit_yz_actual, x1_yz_act);
+%         plot(x1_yz_act, y1_yz_act)
+%         
         title('YZ actual data')
         legend('Actual points', 'Interpolated actual fall', 'Location', 'south')
         

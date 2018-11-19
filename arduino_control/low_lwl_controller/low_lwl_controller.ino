@@ -42,7 +42,7 @@ void setup() {
   pinMode(9, INPUT);
   
   //Make pin the PWM output
-  pinMode(PWMPIN, OUTPUT);
+  pinMode(PWM_VALUE_PIN, OUTPUT);
 }
 
 void loop() {
@@ -58,9 +58,9 @@ void loop() {
 
   // Set direction of rotation to driver
   if(new_pwm >= 0) {
-    analogWrite(PWM_DIR_PIN, PWM_POSITIVE_DIR);
+    digitalWrite(PWM_DIR_PIN, PWM_POSITIVE_DIR);
   } else {
-    analogWrite(PWM_DIR_PIN, PWM_NEGATIVE_DIR);
+    digitalWrite(PWM_DIR_PIN, PWM_NEGATIVE_DIR);
   }
 
   // Set value of PWM to driver

@@ -2,10 +2,10 @@
 
 close all
 clear all
-clc
+%clc
 
 % Run test with local sample?
-context.DEV_ENVIRONMENT = 0;
+context.DEV_ENVIRONMENT = 1;
 
 % (if running with local sample) Which?
 context.DEV_SAMPLE = 3;
@@ -25,7 +25,7 @@ context.method = 2;
 % Sampling frequency
 context.fs = 100;
 
-% Sample length for Method 2
+% Number of samples for Method 2
 context.length_sample = 20;
 
 % Verbose mode? plot and and more..
@@ -46,15 +46,21 @@ else
     %context.ou.LatestMessage
     %at = rospublisher('/arm_trajectory','std_msgs/String');
     %arm_trajectory_msg = rosmessage(at);
+    
+%     shoulder_reference = rospublisher("/shoulder_reference", 'std_msgs/Int32MultiArray');
+%     shoulder_reference_msg = rosmessage(shoulder_reference);
 end
     
+shoulder_reference = rospublisher('/shoulder_reference', 'std_msgs/Int32MultiArray');
+shoulder_reference_msg = rosmessage(shoulder_reference);
+
 %% Throw
 
 % Performed manually
 
 %% Track & predict landing
 tic
-[x_prediction, y_prediction, v_z] = ball_trajectory_calculater(context);
+[x_prediction, y_prediction] = ball_trajectory_calculater(context);
 %fprintf('Predicted landing [x, y] = [%g, %g] mm\n', x_prediction, y_prediction);
 %% Calculate arm trajectory
 q = [-0.1 0 0]';
@@ -67,6 +73,9 @@ toc
 % if DEV_ENVIRONMENT
 %     % Do nothing
 % else
-%    arm_reference_msg.Data = strcat(num2str(x_intersect), ';', num2str(y_intersect));
-%    send(at, arm_trajectory_msg) 
+%    shoulder_reference_msg.Data = q_traj(3, :);
+%    send(shoulder_reference, shoulder_reference_msg) 
 % end
+
+shoulder_reference_msg.Data = q_traj(3, :);
+send(shoulder_reference, shoulder_reference_msg) 

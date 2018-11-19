@@ -187,7 +187,7 @@ if context.DEV_MODE == 1
     disp('--------------------------')
 end
 
-if context.DEV_MODE == 1
+if context.DEV_MODE == 2
     % Plot/results section
     
     H3 = H03(q(1),q(2));
