@@ -13,12 +13,12 @@ function [q_traj] = InvKinLQR(q, state_trgt, context)
 % coordinate system for the base is defined as x - left/right, y -
 % forwards/backwards, z - up/down.
 
-final_size = 100; % Desired final vector length
+final_size = 40; % Desired final vector length
 
 % Link lengths [m]
-l1 = 0.2;
-l2 = 0.2;
-l3 = 0.4;
+l1 = 0.18;
+l2 = 0.24;
+l3 = 0.40;
 
 % % Rotation matrix around x axis of the base
 % Rx = @(theta) [1 0 0 0
@@ -78,7 +78,7 @@ state_init = state;
 e = state_trgt - state;    % Error desried and actual pos
 
 % Maximum number of iterations
-maxIterations = 15000;
+maxIterations = 5000;
 iterations = 1;
 
 % Error tolerance for final EE pos norm [m]
@@ -102,7 +102,7 @@ We = diag([1 1 1]);
 % Wn0 specifies weights for joint usage [Shoulder, upper arm, elbow]
 Wn0 = diag(1.4*[1 1 1]);
 % Joint limits (upper bound = lower bound) and joint limit weight
-JointLim = deg2rad([95 50 115]'); % [Shoulder, upper arm, elbow]
+JointLim = deg2rad([95 65 115]'); % [Shoulder, upper arm, elbow]
 Wl = diag(10*[1 1 1]);
 
 while norm(e) > tolerance

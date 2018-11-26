@@ -68,7 +68,7 @@ tic
 q = [-0.1 0 0]';
 
 %x and y predictions are shifted to align with the axis of the LQR
-% -1 is multiplied in the y due to the transformation of the axis
+% -1 is multiplied in the y-
 state_trgt = [y_prediction x_prediction context.z_intercept]' - Origin_shift;
 state_trgt = diag([1 -1 1])*state_trgt;
 

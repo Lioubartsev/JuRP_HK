@@ -9,5 +9,5 @@ int32_t u_to_pwm(int u) {
   // Set pwm in range [-10, 10]
   pwm = pwm < -10 ? -10 : pwm;
   pwm = pwm > 10 ? 10 : pwm;
-  return pwm
+  return pwm;
 }
