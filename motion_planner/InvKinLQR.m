@@ -1,23 +1,19 @@
 function [q_traj] = InvKinLQR(q, state_trgt, context)
-% INPUT: Current angles [rad], Target state [m]. (Entered as 3x1 vectors.) 
-% OUTPUT: Reference trajectories for all three joints [rad]. 
+% INPUT: Current angles [rad], Target state [m]. (Entered as 3x1 vectors.)
+% OUTPUT: Reference trajectories for all three joints [rad].
 % Output is on the form (Shoulder;UpperArm;Elbow) 3xN matrix. N is the
 % number of iterations
-
-%context.DEV_MODE = 0; % Run in development mode
-%context.DEV_MODE = 1; % with plots
 
 % Inverse kinematics and LQ controller for JuRP-HK. The inverse kinematics
 % are solved numerically using the an altered version of the LM algorithm.
 % The system is linearized in each iteration using the jacobian, as
-% part of the LM algorithm. The input for the final code will be absolute
-% position of the EE and the calculated position where ball catching will
-% take place. Output will consist of reference vectors that will be passed
-% on to the low level PIDs.
+% part of the LM algorithm.
 
 % Angles and lengths are increasingly indexed with shoulder as base. The
 % coordinate system for the base is defined as x - left/right, y -
 % forwards/backwards, z - up/down.
+
+final_size = 100; % Desired final vector length
 
 % Link lengths [m]
 l1 = 0.2;
@@ -29,18 +25,18 @@ l3 = 0.4;
 %     0 cos(theta) -sin(theta) 0
 %     0 sin(theta) cos(theta) 0
 %     0 0 0 1];
-% 
+%
 % % Rotation matrix around y axis of the base
 % Ry = @(theta) [cos(theta) 0 sin(theta) 0
 %     0 1 0 0
 %     -sin(theta) 0 cos(theta) 0
 %     0 0 0 1];
-% 
+%
 % % Translation matrix
 % T = @(l) [1 0 0 0
-%     0 1 0 l
-%     0 0 1 0
-%     0 0 0 1];
+%           0 1 0 l
+%           0 0 1 0
+%           0 0 0 1];
 
 % Translations for all links
 T1 = [1 0 0 0; 0 1 0 l1; 0 0 1 0;0 0 0 1];
@@ -74,21 +70,20 @@ J = @(theta1,theta2,theta3)reshape([0.0,-sin(theta1)-cos(theta3).*...
 % --- optimization part ---
 
 % init for state ([x y z])
-%q = deg2rad([0 0 0])';          % Init angles
 H = H04(q(1),q(2),q(3));
 state = H(1:3,4);
 state_init = state;
 
 % Desired position in absolute coordinates relative to base [m]
-% state_trgt = [0.2 1.8 0.5]';
 e = state_trgt - state;    % Error desried and actual pos
 
 % Maximum number of iterations
 maxIterations = 15000;
 iterations = 1;
+
 % Error tolerance for final EE pos norm [m]
 tolerance = 0.01;
-stepsize = 1/25;    % Error stepsize for linearization
+stepsize = 1/1;    % Error stepsize for linearization
 
 % Coordinate initiation
 x = zeros(1,maxIterations); y = zeros(1,maxIterations);
@@ -102,12 +97,12 @@ z = zeros(1,maxIterations); q_traj = zeros(3,maxIterations);
 
 % --- Weights and constraints ---
 % Error weight, specifies what error is prioritized to minimize [x y z]
-We = diag([1 3 2]);
+We = diag([1 1 1]);
 % Damping factor init. Updated in the loop as a function of the error.
 % Wn0 specifies weights for joint usage [Shoulder, upper arm, elbow]
 Wn0 = diag(1.4*[1 1 1]);
 % Joint limits (upper bound = lower bound) and joint limit weight
-JointLim = deg2rad([95 45 110]'); % [Shoulder, upper arm, elbow]
+JointLim = deg2rad([95 50 115]'); % [Shoulder, upper arm, elbow]
 Wl = diag(10*[1 1 1]);
 
 while norm(e) > tolerance
@@ -129,8 +124,8 @@ while norm(e) > tolerance
     %E = 0.5*diag(e')*We*diag(e);
     E = 0.5*e'*We*e*Wn0;
     Wn =  E + 2.5e-5*eye(3); % Wn = E + Wn_bias
-    % ---------- Angle iteration ----------
     
+    % ---------- Angle iteration ----------
     % Newton Raphson
     % q = q + Jacobian'*((desPos-curPos)/100);  % q(k+1) = q(k) + J'*e/step
     
@@ -165,6 +160,31 @@ end
 x = x(1:iterations-1); y = y(1:iterations-1); z = z(1:iterations-1);
 q_traj = q_traj(:,1:iterations-1);
 
+% ---------- Vector size reshaping ----------
+data = q_traj;
+n = ceil(length(data)/final_size);
+reshaped_data = zeros(size(data,1),length(data)/n);
+
+for row = 1:size(data,1)
+    data = q_traj(row,:);
+    counter = 1;
+    
+    for i = 1:n:length(data)-n+1
+        reshaped_data(row,counter) = mean(data(i:i+n-1));
+        counter = counter + 1;
+    end
+end
+
+if size(reshaped_data,2) < final_size
+    for row = 1:size(reshaped_data,1)
+        reshaped_data(row,length(data)/n:final_size) = ...
+            reshaped_data(row,length(data)/n);
+    end
+end
+
+q_traj = reshaped_data; % Reshaped trajectory data
+
+% ----------- Plot/results section -----------
 % EE travel distance
 if context.DEV_MODE == 1
     psum = 0; xsum = 0; ysum = 0; zsum = 0;
@@ -177,7 +197,8 @@ if context.DEV_MODE == 1
     end
     
     disp(['Distance from goal: ',num2str(round(1000*norm(e),3)), ' mm'])
-    disp(['Iterations: ', num2str(iterations-1)])
+    disp(['Iterations: ', num2str(iterations-1), ', Scaled down to ',...
+        num2str(final_size)])
     disp(['Final EE pos: [',num2str([x(end),y(end),z(end)]), '] m'])
     disp(['Q: [',num2str(q'), '] rad'])
     disp(['EE travel distance: ', num2str(psum), ' m ...'])
@@ -187,8 +208,7 @@ if context.DEV_MODE == 1
     disp('--------------------------')
 end
 
-if context.DEV_MODE == 2
-    % Plot/results section
+if context.DEV_MODE == 1
     
     H3 = H03(q(1),q(2));
     elbowPos = H3(1:3,4);
