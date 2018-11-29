@@ -17,8 +17,9 @@ final_size = 100; % Desired final vector length
 
 % Link lengths [m]
 l1 = 0.18;  % Shoulder to 
-l2 = 0.24;
-l3 = 0.40;
+l2 = 0.235;
+l3 = 0.48;
+l4 = 0.06;
 
 % % Rotation matrix around x axis of the base
 % Rx = @(theta) [1 0 0 0
@@ -41,7 +42,7 @@ l3 = 0.40;
 % Translations for all links
 T1 = [1 0 0 0; 0 1 0 l1; 0 0 1 0;0 0 0 1];
 T2 = [1 0 0 0; 0 1 0 l2; 0 0 1 0;0 0 0 1];
-T3 = [1 0 0 0; 0 1 0 l3; 0 0 1 0;0 0 0 1];
+T3 = [1 0 0 l4; 0 1 0 l3; 0 0 1 0;0 0 0 1];
 
 % Homogenous transformation matrix from base to EE
 %H04 = @(theta1,theta2,theta3) Rx(theta1)*T1*Ry(theta2)*T2*Rx(theta3)*T3;
