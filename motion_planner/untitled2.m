@@ -1,13 +1,32 @@
 %rosshutdown
 %rosinit
-angle = -600;
+angle = -0;
+angle = angle*10;
 
 %while(1)
 
+%choose direction
+choice = 1 ;
 
+if( choice == 0 )
+    angles = zeros(7);
 
-upper_reference = rospublisher('/upper_reference', 'std_msgs/Int16');
-upper_reference_msg = rosmessage(upper_reference);
+elseif ( choice == 1 )
+        angles = [0 5 10 15 20 25 30] * 10;      
+elseif ( choice == -1 )
+        angles = [0 5 10 15 20 25 30] * -10;
+        
+elseif ( choice == 2 )
+        angles = [0 5 10 15 20 25 30] * 10; 
+end
+%
+
+%angles = [0 5 10 15 20 25 30] * -10;
+%upper_reference = rospublisher('/upper_reference', 'std_msgs/Int16');
+%upper_reference_msg = rosmessage(upper_reference);
+
+shoulder_reference = rospublisher('/shoulder_reference', 'std_msgs/Int16');
+shoulder_reference_msg = rosmessage(shoulder_reference);
 
 
 %shoulder_reference = rospublisher('/shoulder_reference', 'std_msgs/Int32MultiArray');
@@ -16,9 +35,27 @@ upper_reference_msg = rosmessage(upper_reference);
 %shoulder_reference = rospublisher('/shoulder_reference', 'std_msgs/Int32');
 %shoulder_reference_msg = rosmessage(shoulder_reference);
 
-upper_reference_msg.Data = angle;
+% for i = 1:length(angles)
+%     upper_reference_msg.Data = angles(i);
+%     send(upper_reference, upper_reference_msg);
+%     pause(0.001);
+% end
+%     upper_reference_msg.Data = 0;
+%     send(upper_reference, upper_reference_msg);
 
-send(upper_reference, upper_reference_msg) 
+     shoulder_reference_msg.Data = 500;
+%      
+angles = [450 400 350 300] % 250 200 150 ]%100 50 0]
+
+for i = 1:length(angles)
+   shoulder_reference_msg.Data = angles(i);
+   send(shoulder_reference, shoulder_reference_msg);
+   pause(0.001);
+end
+     
+     send(shoulder_reference, shoulder_reference_msg);
+%upper_reference_msg.Data = angle;
+%send(upper_reference, upper_reference_msg) 
 
 %pause(1)
 %end

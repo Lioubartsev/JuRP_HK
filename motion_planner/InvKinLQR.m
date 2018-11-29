@@ -13,7 +13,7 @@ function [q_traj] = InvKinLQR(q, state_trgt, context)
 % coordinate system for the base is defined as x - left/right, y -
 % forwards/backwards, z - up/down.
 
-final_size = 100; % Desired final vector length
+final_size = 30; % Desired final vector length
 
 % Link lengths [m]
 l1 = 0.18;  % Shoulder to 

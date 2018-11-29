@@ -15,14 +15,14 @@ float get_serial_value();
 float motor_ref = 0; // reference from ros
 float motor_pos = 0; //motor position from nano
 
-float gear_ratio = 45;
+float gear_ratio = 1;
 
 ros::NodeHandle  nh; //ROS
 std_msgs::Int16 int_msg_4;
 std_msgs::Int16 int_msg_5;
 ros::Publisher chatter_3("chatter_3", &int_msg_4);
-ros::Publisher shoulder_pos("shoulder_pos", &int_msg_5);
-ros::Subscriber<std_msgs::Int16> sub("shoulder_reference", &messageCb);
+ros::Publisher elbow_pos("elbow_pos", &int_msg_5);
+ros::Subscriber<std_msgs::Int16> sub("elbow_reference", &messageCb);
 
 int32_t enc_count = 0;
 int32_t current_pos = 0;
@@ -48,7 +48,7 @@ void setup() {
   nh.initNode();
   nh.subscribe(sub);
   nh.advertise(chatter_3);
-  nh.advertise(shoulder_pos);
+  nh.advertise(elbow_pos);
 
 
   //Set up the software serial
@@ -78,68 +78,7 @@ void setup() {
 void loop() {
   motor_pos = get_serial_value();         //read encoder
   nh.spinOnce();                          //read ref
-
-  if ( motor_pos < 10 )
-  {
-
-    if ( motor_ref - motor_pos  <  0  )
-    {
-      do_PID_stuff( 2 , 0.01 , 0); //(p: 3-4 is good)
-    }
-    else
-    {
-      do_PID_stuff( 5 , 0.01 , 20000); //(p: 3-4 is good)
-    }
-
-
-
-  }
-  else if ( motor_pos < 20 )
-  {
-
-
-    if ( motor_ref - motor_pos  <  0 )
-    {
-      do_PID_stuff( 5 , 0.01 , 0); //(p: 3-4 is good)
-    }
-    else
-    {
-      do_PID_stuff( 8 , 0.01 , 60000 );
-    }
-
-
-
-  }
-  else if ( motor_pos < 30 )
-  {
-
-
-    if ( motor_ref - motor_pos  <  0 )
-    {
-      do_PID_stuff( 5 , 0.01 , 60000); //(p: 3-4 is good)
-    }
-    else
-    {
-      do_PID_stuff( 12, 0.01 , 140000 );
-    }
-
-
-  }
-  else
-  {
-
-
-    if ( motor_ref - motor_pos  <  0 )
-    {
-      do_PID_stuff( 5 , 0.01 , 10000); //(p: 3-4 is good)
-    }
-    else
-    {
-      do_PID_stuff( 13, 0.01 , 100000);
-    }
-
-    
-  }
+  do_PID_stuff( 3, 0 , 1337);
 
   counter++;
 

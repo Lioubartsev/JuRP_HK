@@ -19,7 +19,9 @@ float gear_ratio = 1;
 
 ros::NodeHandle  nh; //ROS
 std_msgs::Int16 int_msg_4;
+std_msgs::Int16 int_msg_5;
 ros::Publisher chatter_3("chatter_3", &int_msg_4);
+ros::Publisher upper_pos("upper_pos", &int_msg_5);
 ros::Subscriber<std_msgs::Int16> sub("upper_reference", &messageCb);
 
 int32_t enc_count = 0;
@@ -46,6 +48,7 @@ void setup() {
   nh.initNode();
   nh.subscribe(sub);
   nh.advertise(chatter_3);
+  nh.advertise(upper_pos);
 
   //Set up the software serial
   breakfastSerial.begin(74880);

@@ -3,14 +3,15 @@ void messageCb( const std_msgs::Int16& reference)
 {
   motor_ref = reference.data / 10.0;
 
-  if ( motor_ref > 80 )
+    if( motor_ref > 80 )
   {
     motor_ref = 80;
   }
-  else if ( motor_ref < 0 )
+  else if ( motor_ref < -80 )
   {
-    motor_ref = 0;
+    motor_ref = -80;
   }
+
 }
 
 
@@ -22,8 +23,9 @@ void do_PID_stuff(float P, float I, float D) {
   time_new = micros();
 
   double p_part = P * e; //
-  double d_part = D * (e - e_old) / ((time_new - time_old) * 0.000001);
   double i_part = I * e_sum; //e_sum just increases so much that it immediately overflows.
+  double d_part = D * (e - e_old) / ((time_new - time_old) * 0.000001);
+
 
   if (e_sum > 30 / I) { //saturation
     e_sum = 30 / I;
@@ -34,28 +36,28 @@ void do_PID_stuff(float P, float I, float D) {
   e_sum += e;
 
   if (counter % 500 == 0) { //needed to slow down the prints to get reasonable values
-    int16_t sho_pos = int16_t(motor_pos * 10);
-    int_msg_5.data = sho_pos;
-    shoulder_pos.publish( &int_msg_5);
-    //    int16_t motor_ref_debug = motor_ref;
-    //    int_msg_4.data = motor_ref_debug;
-    //    chatter_3.publish( &int_msg_4 );
-    //    int16_t pos_part16 = motor_pos;
-    //    int_msg_4.data = pos_part16;
-    //    chatter_3.publish( &int_msg_4 );
-    //    //    int16_t e16 = e;
-    //    //    int_msg_4.data = e16;
-    //    int16_t p_part16 = p_part;
-    //    int_msg_4.data = p_part16;
-    //    chatter_3.publish( &int_msg_4 );
-    //    int16_t i_part16 = i_part;
-    //    int_msg_4.data = i_part16;
-    //    chatter_3.publish( &int_msg_4 );
-    //    int16_t d_part16 = d_part;
-    //    int_msg_4.data = d_part16;
-    //    chatter_3.publish( &int_msg_4 );
-    //    int_msg_4.data = 9999;
-    //    chatter_3.publish( &int_msg_4 );
+    int16_t elb_pos= int16_t(motor_pos*10);
+    int_msg_5.data = elb_pos;
+    elbow_pos.publish( &int_msg_5);
+//    int16_t motor_ref_debug = motor_ref;
+//    int_msg_4.data = motor_ref_debug;
+//    chatter_3.publish( &int_msg_4 );
+//    int16_t pos_part16 = motor_pos;
+//    int_msg_4.data = pos_part16;
+//    chatter_3.publish( &int_msg_4 );
+//    //    int16_t e16 = e;
+//    //    int_msg_4.data = e16;
+//    int16_t p_part16 = p_part;
+//    int_msg_4.data = p_part16;
+//    chatter_3.publish( &int_msg_4 );
+//    int16_t i_part16 = i_part;
+//    int_msg_4.data = i_part16;
+//    chatter_3.publish( &int_msg_4 );
+//    int16_t d_part16 = d_part;
+//    int_msg_4.data = d_part16;
+//    chatter_3.publish( &int_msg_4 );
+//    int_msg_4.data = 9999;
+//    chatter_3.publish( &int_msg_4 );
   }
 
   float pwm = round(p_part + i_part + d_part);
