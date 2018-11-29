@@ -13,10 +13,10 @@ function [q_traj] = InvKinLQR(q, state_trgt, context)
 % coordinate system for the base is defined as x - left/right, y -
 % forwards/backwards, z - up/down.
 
-final_size = 40; % Desired final vector length
+final_size = 100; % Desired final vector length
 
 % Link lengths [m]
-l1 = 0.18;
+l1 = 0.18;  % Shoulder to 
 l2 = 0.24;
 l3 = 0.40;
 
@@ -78,12 +78,12 @@ state_init = state;
 e = state_trgt - state;    % Error desried and actual pos
 
 % Maximum number of iterations
-maxIterations = 5000;
-iterations = 1;
+maxIterations = 10000;
+iterations = 1; % Counter ++
 
 % Error tolerance for final EE pos norm [m]
 tolerance = 0.01;
-stepsize = 1/1;    % Error stepsize for linearization
+stepsize = 1/10;    % Error stepsize for linearization
 
 % Coordinate initiation
 x = zeros(1,maxIterations); y = zeros(1,maxIterations);
@@ -163,7 +163,8 @@ q_traj = q_traj(:,1:iterations-1);
 % ---------- Vector size reshaping ----------
 data = q_traj;
 n = ceil(length(data)/final_size);
-reshaped_data = zeros(size(data,1),length(data)/n);
+value = ceil(length(data)/n);
+reshaped_data = zeros(size(data,1),value);
 
 for row = 1:size(data,1)
     data = q_traj(row,:);
@@ -177,8 +178,7 @@ end
 
 if size(reshaped_data,2) < final_size
     for row = 1:size(reshaped_data,1)
-        reshaped_data(row,length(data)/n:final_size) = ...
-            reshaped_data(row,length(data)/n);
+        reshaped_data(row,value:final_size) = q(row);%reshaped_data(row,value-1);
     end
 end
 
@@ -197,7 +197,7 @@ if context.DEV_MODE == 1
     end
     
     disp(['Distance from goal: ',num2str(round(1000*norm(e),3)), ' mm'])
-    disp(['Iterations: ', num2str(iterations-1), ', Scaled down to ',...
+    disp(['Iterations: ', num2str(iterations-1), ', Scaled to ',...
         num2str(final_size)])
     disp(['Final EE pos: [',num2str([x(end),y(end),z(end)]), '] m'])
     disp(['Q: [',num2str(q'), '] rad'])
