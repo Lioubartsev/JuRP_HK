@@ -1,7 +1,7 @@
 #define PWM_VALUE_PIN 3 // Value of PWM to driver
 #define PWM_DIR_PIN 4 // Direction of PWM to driver
-#define PWM_POSITIVE_DIR HIGH
-#define PWM_NEGATIVE_DIR LOW
+#define PWM_POSITIVE_DIR LOW
+#define PWM_NEGATIVE_DIR HIGH
 #include <AltSoftSerial.h>
 #include <ros.h>
 #include <std_msgs/Int16.h>
@@ -15,12 +15,12 @@ float get_serial_value();
 float motor_ref = 0; // reference from ros
 float motor_pos = 0; //motor position from nano
 
-float gear_ratio = 1;
+float gear_ratio = 45;
 
 ros::NodeHandle  nh; //ROS
 std_msgs::Int16 int_msg_4;
 ros::Publisher chatter_3("chatter_3", &int_msg_4);
-ros::Subscriber<std_msgs::Int16> sub("upper_reference", &messageCb);
+ros::Subscriber<std_msgs::Int16> sub("shoulder_reference", &messageCb);
 
 int32_t enc_count = 0;
 int32_t current_pos = 0;
@@ -62,9 +62,9 @@ void setup() {
   ////////////////////////////////////////////// DEBUG TIMER /////////////////////////////////////////////
 
   //delay(10000);
-//  int16_t debug1 = micros();
-//  delay(10);
-//  int_msg_4.data = debug1 - micros();
+  //  int16_t debug1 = micros();
+  //  delay(10);
+  //  int_msg_4.data = debug1 - micros();
   //int_msg_4.data = 0;
   //chatter_3.publish( &int_msg_4 );
 
@@ -74,7 +74,69 @@ void setup() {
 void loop() {
   motor_pos = get_serial_value();         //read encoder
   nh.spinOnce();                          //read ref
-  do_PID_stuff(); //Control loop thingy
+
+  if ( motor_pos < 10 )
+  {
+
+    if ( motor_ref - motor_pos  <  0  )
+    {
+      do_PID_stuff( 2 , 0.01 , 0); //(p: 3-4 is good)
+    }
+    else
+    {
+      do_PID_stuff( 5 , 0.01 , 20000); //(p: 3-4 is good)
+    }
+
+
+
+  }
+  else if ( motor_pos < 20 )
+  {
+
+
+    if ( motor_ref - motor_pos  <  0 )
+    {
+      do_PID_stuff( 5 , 0.01 , 0); //(p: 3-4 is good)
+    }
+    else
+    {
+      do_PID_stuff( 8 , 0.01 , 60000 );
+    }
+
+
+
+  }
+  else if ( motor_pos < 30 )
+  {
+
+
+    if ( motor_ref - motor_pos  <  0 )
+    {
+      do_PID_stuff( 5 , 0.01 , 60000); //(p: 3-4 is good)
+    }
+    else
+    {
+      do_PID_stuff( 12, 0.01 , 140000 );
+    }
+
+
+  }
+  else
+  {
+
+
+    if ( motor_ref - motor_pos  <  0 )
+    {
+      do_PID_stuff( 5 , 0.01 , 10000); //(p: 3-4 is good)
+    }
+    else
+    {
+      do_PID_stuff( 13, 0.01 , 100000);
+    }
+
+    
+  }
+
   counter++;
 
 }
