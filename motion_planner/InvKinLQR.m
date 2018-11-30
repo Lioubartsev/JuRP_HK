@@ -13,13 +13,13 @@ function [q_traj] = InvKinLQR(q, state_trgt, context)
 % coordinate system for the base is defined as x - left/right, y -
 % forwards/backwards, z - up/down.
 
-final_size = 30; % Desired final vector length
+final_size = 135; % Desired final vector length
 
 % Link lengths [m]
-l1 = 0.18;  % Shoulder to 
-l2 = 0.235;
-l3 = 0.48;
-l4 = 0.06;
+l1 = 0.18;  % Shoulder to upper arm
+l2 = 0.235; % Upper arm to elbow
+l3 = 0.48;  % Elbow to EE in Y
+l4 = 0.06;  % Elbow to EE in X
 
 % % Rotation matrix around x axis of the base
 % Rx = @(theta) [1 0 0 0
@@ -74,6 +74,7 @@ J = @(theta1,theta2,theta3)reshape([0.0,-sin(theta1)-cos(theta3).*...
 H = H04(q(1),q(2),q(3));
 state = H(1:3,4);
 state_init = state;
+q_init = q;
 
 % Desired position in absolute coordinates relative to base [m]
 e = state_trgt - state;    % Error desried and actual pos
@@ -84,7 +85,7 @@ iterations = 1; % Counter ++
 
 % Error tolerance for final EE pos norm [m]
 tolerance = 0.01;
-stepsize = 1/10;    % Error stepsize for linearization
+stepsize = 1/5;    % Error stepsize for linearization
 
 % Coordinate initiation
 x = zeros(1,maxIterations); y = zeros(1,maxIterations);
@@ -101,10 +102,11 @@ z = zeros(1,maxIterations); q_traj = zeros(3,maxIterations);
 We = diag([1 1 1]);
 % Damping factor init. Updated in the loop as a function of the error.
 % Wn0 specifies weights for joint usage [Shoulder, upper arm, elbow]
-Wn0 = diag(1.4*[1 1 1]);
+Wn0 = diag([1 1 1]);
 % Joint limits (upper bound = lower bound) and joint limit weight
-JointLim = deg2rad([95 65 115]'); % [Shoulder, upper arm, elbow]
-Wl = diag(10*[1 1 1]);
+JointLimUpper  = deg2rad([10 65 120]'); % [Shoulder, upper arm, elbow]
+JointLimLower = deg2rad([-95 -65 -120]'); % [Shoulder, upper arm, elbow]
+Wl = diag(1*[1 1 1]);
 
 while norm(e) > tolerance
     
@@ -136,14 +138,14 @@ while norm(e) > tolerance
     % q = q + Jp*gk;
     
     % Levenberg Marquardt
-    lim = (diag(JointLim - abs(q)))'*Wl*(diag(JointLim - abs(q)));
-    Hj = Jacobian'*We*Jacobian + Wn + lim^-1;
-    gk = Jacobian'*We*((state_trgt-state)*stepsize);
-    q = q + Hj^-1*gk;    % q(k+1) = q(k) + (J'We + Wn + lim^-1)^-1*J'We*e
+    UpperLim = (diag(JointLimUpper - abs(q)))'*...
+        Wl*(diag(JointLimUpper - abs(q)));
+    LowerLim = (diag(JointLimLower - abs(q)))'*...
+        Wl*(diag(JointLimLower - abs(q)));
     
-    % q = q + (Jacobian'*We*Jacobian + Wn + ((diag(JointLim - abs(q)))'...
-    %    *Wl*(diag(JointLim - abs(q))))^-1)^-1*(Jacobian'*We*...
-    %    ((state_trgt-state)/100));
+    Hj = Jacobian'*We*Jacobian + Wn + UpperLim^-1 + LowerLim^-1;
+    gk = Jacobian'*We*((state_trgt-state)*stepsize);
+    q = q + Hj^-1*gk;
     % -------------------------------------
     
     % Error
@@ -179,7 +181,7 @@ end
 
 if size(reshaped_data,2) < final_size
     for row = 1:size(reshaped_data,1)
-        reshaped_data(row,value:final_size) = q(row);%reshaped_data(row,value-1);
+        reshaped_data(row,value:final_size) = q(row);
     end
 end
 
@@ -214,6 +216,9 @@ if context.DEV_MODE == 1
     H3 = H03(q(1),q(2));
     elbowPos = H3(1:3,4);
     
+    H3_init = H03(q_init(1),q_init(2));
+    elbowPos_init = H3_init(1:3,4);
+    
     figure(1)
     plot3(x,y,z)
     grid on
@@ -221,6 +226,9 @@ if context.DEV_MODE == 1
     plot3(state_init(1),state_init(2),state_init(3),'m*')
     plot3(state_trgt(1),state_trgt(2),state_trgt(3),'rO')
     plot3(x(end),y(end),z(end),'b+')
+    line([0 elbowPos_init(1) state_init(1)],[0 elbowPos_init(2)...
+        state_init(2)],[0 elbowPos_init(3) state_init(3)]...
+        ,'Color','k','LineWidth',1);
     line([0 elbowPos(1) state(1)],[0 elbowPos(2) state(2)],...
         [0 elbowPos(3) state(3)],'Color','k','LineWidth',2);
     
@@ -228,8 +236,9 @@ if context.DEV_MODE == 1
     ylabel('Y')
     zlabel('Z')
     title('EE movment in 3D space')
-    legend('EE trajectory','Start Pos','Desired Pos', 'Final EE pos')
-    axis([-0.8 0.8 0 1.6 -0.8 0.8])
+    legend('EE trajectory','Start Pos','Desired Pos', 'Final EE pos',...
+        'Initial arm config', 'Final arm config')
+    axis([-0.9 0.9 0 1.8 -0.9 0.9])
     
     figure(2)
     subplot(3,2,1)
@@ -268,4 +277,32 @@ if context.DEV_MODE == 1
     title('Angle reference for all joints')
     ylabel('Angle [deg]')
     xlabel('Iterations')
+    
+    h = line([0 final_size],rad2deg([JointLimUpper(1) JointLimUpper(1)]));
+    h.LineStyle = '--';
+    h.Color = [0    0.4470    0.7410];
+    h.HandleVisibility = 'off';
+    h = line([0 final_size],rad2deg([JointLimLower(1) JointLimLower(1)]));
+    h.LineStyle = '--';
+    h.Color = [0    0.4470    0.7410];
+    h.HandleVisibility = 'off';
+    
+    h = line([0 final_size],rad2deg([JointLimUpper(2) JointLimUpper(2)]));
+    h.LineStyle = '--';
+    h.Color = [0.8500    0.3250    0.0980];
+    h.HandleVisibility = 'off';
+    h = line([0 final_size],rad2deg([JointLimLower(2) JointLimLower(2)]));
+    h.LineStyle = '--';
+    h.Color = [0.8500    0.3250    0.0980];
+    h.HandleVisibility = 'off';
+    
+    h = line([0 final_size],rad2deg([JointLimUpper(3) JointLimUpper(3)]));
+    h.LineStyle = '--';
+    h.Color = [0.9290    0.6940    0.1250];
+    h.HandleVisibility = 'off';
+    h = line([0 final_size],rad2deg([JointLimLower(3) JointLimLower(3)]));
+    h.LineStyle = '--';
+    h.Color = [0.9290    0.6940    0.1250];
+    h.HandleVisibility = 'off';
+    
 end
