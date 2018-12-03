@@ -3,7 +3,7 @@ void messageCb( const std_msgs::Int16& reference)
 {
   motor_ref = reference.data / 10.0;
 
-    if( motor_ref > 80 )
+  if ( motor_ref > 80 )
   {
     motor_ref = 80;
   }
@@ -36,28 +36,28 @@ void do_PID_stuff(float P, float I, float D) {
   e_sum += e;
 
   if (counter % 500 == 0) { //needed to slow down the prints to get reasonable values
-    int16_t elb_pos= int16_t(motor_pos*10);
+    int16_t elb_pos = int16_t(motor_pos * 10);
     int_msg_5.data = elb_pos;
     elbow_pos.publish( &int_msg_5);
-//    int16_t motor_ref_debug = motor_ref;
-//    int_msg_4.data = motor_ref_debug;
-//    chatter_3.publish( &int_msg_4 );
-//    int16_t pos_part16 = motor_pos;
-//    int_msg_4.data = pos_part16;
-//    chatter_3.publish( &int_msg_4 );
-//    //    int16_t e16 = e;
-//    //    int_msg_4.data = e16;
-//    int16_t p_part16 = p_part;
-//    int_msg_4.data = p_part16;
-//    chatter_3.publish( &int_msg_4 );
-//    int16_t i_part16 = i_part;
-//    int_msg_4.data = i_part16;
-//    chatter_3.publish( &int_msg_4 );
-//    int16_t d_part16 = d_part;
-//    int_msg_4.data = d_part16;
-//    chatter_3.publish( &int_msg_4 );
-//    int_msg_4.data = 9999;
-//    chatter_3.publish( &int_msg_4 );
+    //    int16_t motor_ref_debug = motor_ref;
+    //    int_msg_4.data = motor_ref_debug;
+    //    chatter_3.publish( &int_msg_4 );
+    //    int16_t pos_part16 = motor_pos;
+    //    int_msg_4.data = pos_part16;
+    //    chatter_3.publish( &int_msg_4 );
+    //    //    int16_t e16 = e;
+    //    //    int_msg_4.data = e16;
+    //    int16_t p_part16 = p_part;
+    //    int_msg_4.data = p_part16;
+    //    chatter_3.publish( &int_msg_4 );
+    //    int16_t i_part16 = i_part;
+    //    int_msg_4.data = i_part16;
+    //    chatter_3.publish( &int_msg_4 );
+    //    int16_t d_part16 = d_part;
+    //    int_msg_4.data = d_part16;
+    //    chatter_3.publish( &int_msg_4 );
+    //    int_msg_4.data = 9999;
+    //    chatter_3.publish( &int_msg_4 );
   }
 
   float pwm = round(p_part + i_part + d_part);
@@ -71,10 +71,8 @@ void do_PID_stuff(float P, float I, float D) {
 
   if (pwm >= 0) {  // Set direction of rotation to driver
     digitalWrite(PWM_DIR_PIN, PWM_POSITIVE_DIR);
-    //Serial.print("Pos  ");
   } else {
     digitalWrite(PWM_DIR_PIN, PWM_NEGATIVE_DIR);
-    //Serial.print("Neg  ");
   }
   analogWrite(PWM_VALUE_PIN, abs(pwm));   // Set value of PWM to driver
 
@@ -115,4 +113,16 @@ float get_serial_value() {
   //transform enc count to degrees
   return value * 360.0 / (2304.0 * gear_ratio); //conversion, gives float
 
+}
+
+void do_throw_stuff() {
+  if (motor_pos < motor_ref && thrown == 0) {
+    digitalWrite(PWM_DIR_PIN, PWM_POSITIVE_DIR);
+    analogWrite(PWM_VALUE_PIN, 255);
+  }
+  if (motor_pos >= motor_ref) {
+    digitalWrite(PWM_DIR_PIN, PWM_NEGATIVE_DIR);
+    thrown = 1;
+    //ros write throwBool = 1
+  }
 }

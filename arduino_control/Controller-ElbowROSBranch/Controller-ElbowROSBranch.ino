@@ -4,6 +4,7 @@
 #define PWM_NEGATIVE_DIR HIGH
 #include <AltSoftSerial.h>
 #include <ros.h>
+#include <std_msgs/Bool.h>
 #include <std_msgs/Int16.h>
 AltSoftSerial breakfastSerial;
 
@@ -20,9 +21,13 @@ float gear_ratio = 1;
 ros::NodeHandle  nh; //ROS
 std_msgs::Int16 int_msg_4;
 std_msgs::Int16 int_msg_5;
+std_msgs::Bool int_msg_6;
+
 ros::Publisher chatter_3("chatter_3", &int_msg_4);
 ros::Publisher elbow_pos("elbow_pos", &int_msg_5);
+ros::Publisher throw_arduino("throw_arduino", &int_msg_6);
 ros::Subscriber<std_msgs::Int16> sub("elbow_reference", &messageCb);
+
 
 int32_t enc_count = 0;
 int32_t current_pos = 0;
@@ -42,6 +47,7 @@ int msg = 0;
 int msgCheck = 0;
 
 int counter = 0;
+bool thrown = 1;
 
 void setup() {
   //Set up ROS

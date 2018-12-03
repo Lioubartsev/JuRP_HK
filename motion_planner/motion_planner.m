@@ -107,6 +107,9 @@ toc
 
 %Compress data
 q_traj = q_traj * 10 * 360 / (2 * pi);
+q_traj(1,:) = q_traj(1,:) + 900;
+q_traj(3,:) = q_traj(3,:) - 900;
+
 for i = 1:length( q_traj(1,:) )
     shoulder_reference_msg.Data = q_traj(1, i)+900;
     send(shoulder_reference, shoulder_reference_msg); 

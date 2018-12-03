@@ -62,16 +62,7 @@ void setup() {
 
   pinMode(PWM_VALUE_PIN, OUTPUT); //PWM PIN!
   pinMode(PWM_DIR_PIN, OUTPUT); //DIR PIN!
-  ////////////////////////////////////////////// DEBUG TIMER /////////////////////////////////////////////
 
-  //delay(10000);
-//  int16_t debug1 = micros();
-//  delay(10);
-//  int_msg_4.data = debug1 - micros();
-  //int_msg_4.data = 0;
-  //chatter_3.publish( &int_msg_4 );
-
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
 void loop() {

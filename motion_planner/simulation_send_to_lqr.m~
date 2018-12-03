@@ -6,9 +6,6 @@ rosinit
 
 context.DEV_MODE = 1; 
 
-context.Sim_mode = 1;
-
-
 %subscribe to get current position
 shoulder_pos_ros = rossubscriber('/shoulder_pos');
 upper_pos_ros = rossubscriber('/upper_pos');
@@ -54,7 +51,7 @@ q_traj = q_traj * 10 * 360 / (2 * pi) ;
 q_traj(1,:) = q_traj(1,:) + 900;
 
 for i= 1:length(q_traj)
-    elbow_reference_msg.Data = q_traj(3, i);
+       elbow_reference_msg.Data = q_traj(3, i)-900;
     send(elbow_reference, elbow_reference_msg);
-    pause(0.5); 
+    pause(0.01); 
 end
