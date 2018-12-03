@@ -102,11 +102,9 @@ z = zeros(1,maxIterations); q_traj = zeros(3,maxIterations);
 We = diag([1 1 1]);
 % Damping factor init. Updated in the loop as a function of the error.
 % Wn0 specifies weights for joint usage [Shoulder, upper arm, elbow]
-<<<<<<< HEAD
-Wn0 = diag(1.4*[1 2 2]);
-=======
+
 Wn0 = diag([1 1 1]);
->>>>>>> 783eb529ef903aa4545f9185f60e4b3832251bce
+
 % Joint limits (upper bound = lower bound) and joint limit weight
 JointLimUpper  = deg2rad([10 65 120]'); % [Shoulder, upper arm, elbow]
 JointLimLower = deg2rad([-95 -65 -120]'); % [Shoulder, upper arm, elbow]
