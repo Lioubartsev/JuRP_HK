@@ -29,7 +29,7 @@ context.fs = 100;
 context.length_sample = 20;
 
 % Verbose mode? plot and and more..
-context.DEV_MODE = 1; 
+context.DEV_MODE = 0; 
 
 % Set up environment
 addpath(genpath(pwd));
@@ -61,7 +61,8 @@ upper_reference_msg = rosmessage(upper_reference);
 elbow_reference = rospublisher('/elbow_reference', 'std_msgs/Int16');
 elbow_reference_msg = rosmessage(elobw_reference);
 
-Origin_shift = [1.098 0.850 0.412]'
+%Origin shift from Vicon to LQR
+Origin_shift = [1.098 0.850 0.412]';
 
 %% Throw
 
@@ -89,7 +90,7 @@ elbow_pos_val = (cast(elbow_pos, 'double')+900) *2*pi/(10*360);
 q = [shoulder_pos_val upper_pos_val elbow_pos_val]';
 %q = [-0.1 0 0]';
 
-%x and y predictions are shifted to align with the axis of the LQR
+% x and y predictions are shifted to align with the axis of the LQR
 % -1 is multiplied in the y due to the transformation of the axis
 state_trgt = [y_prediction x_prediction context.z_intercept]' - Origin_shift;
 state_trgt = diag([1 -1 1])*state_trgt;
@@ -98,15 +99,11 @@ state_trgt = diag([1 -1 1])*state_trgt;
 toc
 %% Send control signal
 
-% if DEV_ENVIRONMENT
-%     % Do nothing
-% else
-%    shoulder_reference_msg.Data = q_traj(3, :);
-%    send(shoulder_reference, shoulder_reference_msg) 
-% end
-
 %Compress data
 q_traj = q_traj * 10 * 360 / (2 * pi);
+q_traj(1,:) = q_traj(1,:) + 900;
+q_traj(3,:) = q_traj(3,:) - 900;
+
 for i = 1:length( q_traj(1,:) )
     shoulder_reference_msg.Data = q_traj(1, i)+900;
     send(shoulder_reference, shoulder_reference_msg); 
@@ -114,5 +111,5 @@ for i = 1:length( q_traj(1,:) )
     send(upper_reference, upper_reference_msg);
     elbow_reference_msg.Data = q_traj(3, i)-900;
     send(elbow_reference, elbow_reference_msg);
-    pause(0.01);
+    pause(0.06);
 end

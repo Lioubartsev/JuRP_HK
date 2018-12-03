@@ -13,7 +13,7 @@ function [q_traj] = InvKinLQR(q, state_trgt, context)
 % coordinate system for the base is defined as x - left/right, y -
 % forwards/backwards, z - up/down.
 
-final_size = 135; % Desired final vector length
+final_size = 30; % Desired final vector length
 
 % Link lengths [m]
 l1 = 0.18;  % Shoulder to upper arm
@@ -107,7 +107,7 @@ Wn0 = diag([1 1 1]);
 
 % Joint limits (upper bound = lower bound) and joint limit weight
 JointLimUpper  = deg2rad([10 65 120]'); % [Shoulder, upper arm, elbow]
-JointLimLower = deg2rad([-95 -65 -120]'); % [Shoulder, upper arm, elbow]
+JointLimLower = deg2rad([-90 -65 -120]'); % [Shoulder, upper arm, elbow]
 Wl = diag(1*[1 1 1]);
 
 while norm(e) > tolerance

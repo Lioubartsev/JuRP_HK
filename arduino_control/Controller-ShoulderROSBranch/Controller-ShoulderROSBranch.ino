@@ -79,67 +79,71 @@ void loop() {
   motor_pos = get_serial_value();         //read encoder
   nh.spinOnce();                          //read ref
 
-  if ( motor_pos < 10 )
-  {
+  do_PID_stuff( 30 , 0.01 , 0); //(p: 3-4 is good)
 
-    if ( motor_ref - motor_pos  <  0  )
-    {
-      do_PID_stuff( 2 , 0.01 , 0); //(p: 3-4 is good)
-    }
-    else
-    {
-      do_PID_stuff( 5 , 0.01 , 20000); //(p: 3-4 is good)
-    }
-
-
-
-  }
-  else if ( motor_pos < 20 )
-  {
-
-
-    if ( motor_ref - motor_pos  <  0 )
-    {
-      do_PID_stuff( 5 , 0.01 , 0); //(p: 3-4 is good)
-    }
-    else
-    {
-      do_PID_stuff( 8 , 0.01 , 60000 );
-    }
-
-
-
-  }
-  else if ( motor_pos < 30 )
-  {
-
-
-    if ( motor_ref - motor_pos  <  0 )
-    {
-      do_PID_stuff( 5 , 0.01 , 60000); //(p: 3-4 is good)
-    }
-    else
-    {
-      do_PID_stuff( 12, 0.01 , 140000 );
-    }
-
-
-  }
-  else
-  {
-
-
-    if ( motor_ref - motor_pos  <  0 )
-    {
-      do_PID_stuff( 5 , 0.01 , 10000); //(p: 3-4 is good)
-    }
-    else
-    {
-      do_PID_stuff( 13, 0.01 , 100000);
-    }
+//  if ( motor_pos < 10 )
+//  {
+//
+//      do_PID_stuff( 25 , 0 , 0); //(p: 3-4 is good)
+//
+////    if ( motor_ref - motor_pos  <  0  )
+////    {
+////      
+////    }
+////    else
+////    {
+////      do_PID_stuff( 5 , 0.01 , 20000); //(p: 3-4 is good)
+////    }
+//
+//
+//
+//  }
+//  else if ( motor_pos < 20 )
+//  {
+//
+//
+//    if ( motor_ref - motor_pos  <  0 )
+//    {
+//      do_PID_stuff( 5 , 0.01 , 0); //(p: 3-4 is good)
+//    }
+//    else
+//    {
+//      do_PID_stuff( 8 , 0.01 , 60000 );
+//    }
+//
+//
+//
+//  }
+//  else if ( motor_pos < 30 )
+//  {
+//
+//
+//    if ( motor_ref - motor_pos  <  0 )
+//    {
+//      do_PID_stuff( 5 , 0.01 , 60000); //(p: 3-4 is good)
+//    }
+//    else
+//    {
+//      do_PID_stuff( 12, 0.01 , 140000 );
+//    }
+//
+//
+//  }
+//  else
+//  {
+//
+//
+//    if ( motor_ref - motor_pos  <  0 )
+//    {
+//      do_PID_stuff( 5 , 0.01 , 10000); //(p: 3-4 is good)
+//    }
+//    else
+//    {
+//      do_PID_stuff( 13, 0.01 , 100000);
+//    }
 
     
-  }
+//  }
 
   counter++;
 

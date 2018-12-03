@@ -7,7 +7,7 @@ void messageCb( const std_msgs::Int16& reference)
   {
     motor_ref = 70;
   }
-  else if ( motor_ref < 70 )
+  else if ( motor_ref < -70 )
   {
     motor_ref = -70;
   }
@@ -25,8 +25,8 @@ void do_PID_stuff() {
   time_new = micros();
   
   static float I = 0.00095;
-  double p_part = 5 * e; //
-  double d_part = 80 * (e - e_old) / ((time_new - time_old)*0.000001);
+  double p_part = 16 * e; //
+  double d_part = 0 * (e - e_old) / ((time_new - time_old)*0.000001);
   double i_part = 0*I * e_sum; //e_sum just increases so much that it immediately overflows.
   if (e_sum > 20/I) { //saturation
     e_sum = 20/I;
@@ -39,17 +39,19 @@ void do_PID_stuff() {
 
   
   if (counter % 500 == 0) { //needed to slow down the prints to get reasonable values
+    
     int16_t upp_pos= int16_t(motor_pos*10);
     int_msg_5.data = upp_pos;
     upper_pos.publish( &int_msg_5);
 
-//    int16_t motor_ref_debug = motor_ref;
-//    int_msg_4.data = motor_ref_debug;  
-//    chatter_3.publish( &int_msg_4 );
+    int16_t motor_ref_debug = motor_ref;
+    int_msg_4.data = motor_ref_debug;  
+    chatter_3.publish( &int_msg_4 );
 
-//    int16_t e16 = int16_t(e);
-//    int_msg_4.data = e16;
-//    chatter_3.publish( &int_msg_4 );
+    int16_t e16 = int16_t(e);
+    int_msg_4.data = e16;
+    chatter_3.publish( &int_msg_4 );
+
 //    int16_t e16 = int16_t(e-e_old);
 //    int_msg_4.data = e16;
 //    chatter_3.publish( &int_msg_4 );
@@ -57,12 +59,12 @@ void do_PID_stuff() {
 //    int16_t i_part16 = i_part;
 //    int_msg_4.data = i_part16;
 //    chatter_3.publish( &int_msg_4 );
-//    int16_t p_part16 = p_part;
-//    int_msg_4.data = p_part16;
-//    chatter_3.publish( &int_msg_4 );    
-    int16_t d_part16 = d_part;
-    int_msg_4.data = d_part16;
-    chatter_3.publish( &int_msg_4 );
+    int16_t p_part16 = p_part;
+    int_msg_4.data = p_part16;
+    chatter_3.publish( &int_msg_4 );    
+//    int16_t d_part16 = d_part;
+//    int_msg_4.data = d_part16;
+//    chatter_3.publish( &int_msg_4 );
     int_msg_4.data = 9999;
     chatter_3.publish( &int_msg_4 );
   }
