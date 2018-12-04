@@ -85,7 +85,7 @@ iterations = 1; % Counter ++
 
 % Error tolerance for final EE pos norm [m]
 tolerance = 0.01;
-stepsize = 1/5;    % Error stepsize for linearization
+stepsize = 1/1;    % Error stepsize for linearization
 
 % Coordinate initiation
 x = zeros(1,maxIterations); y = zeros(1,maxIterations);
@@ -102,12 +102,10 @@ z = zeros(1,maxIterations); q_traj = zeros(3,maxIterations);
 We = diag([1 1 1]);
 % Damping factor init. Updated in the loop as a function of the error.
 % Wn0 specifies weights for joint usage [Shoulder, upper arm, elbow]
-
-Wn0 = diag([1 1 1]);
-
+Wn0 = diag(3*[1 1 1]);
 % Joint limits (upper bound = lower bound) and joint limit weight
 JointLimUpper  = deg2rad([10 65 120]'); % [Shoulder, upper arm, elbow]
-JointLimLower = deg2rad([-90 -65 -120]'); % [Shoulder, upper arm, elbow]
+JointLimLower = deg2rad([-95 -65 -120]'); % [Shoulder, upper arm, elbow]
 Wl = diag(1*[1 1 1]);
 
 while norm(e) > tolerance
@@ -167,7 +165,8 @@ q_traj = q_traj(:,1:iterations-1);
 
 % ---------- Vector size reshaping ----------
 data = q_traj;
-n = ceil(length(data)/final_size);
+final_size = final_size + 1;
+n = ceil(length(data)/(final_size));
 value = ceil(length(data)/n);
 reshaped_data = zeros(size(data,1),value);
 
@@ -186,8 +185,8 @@ if size(reshaped_data,2) < final_size
         reshaped_data(row,value:final_size) = q(row);
     end
 end
-
-q_traj = reshaped_data; % Reshaped trajectory data
+final_size = final_size - 1;
+q_traj = reshaped_data(:,1:end-1); % Reshaped trajectory data
 
 % ----------- Plot/results section -----------
 % EE travel distance
