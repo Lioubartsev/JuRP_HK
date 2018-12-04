@@ -20,6 +20,7 @@ l1 = 0.18;  % Shoulder to upper arm
 l2 = 0.235; % Upper arm to elbow
 l3 = 0.48;  % Elbow to EE in Y
 l4 = 0.06;  % Elbow to EE in X
+l5 = 0.06;  % Elbow to EE in Z
 
 % % Rotation matrix around x axis of the base
 % Rx = @(theta) [1 0 0 0
@@ -42,7 +43,7 @@ l4 = 0.06;  % Elbow to EE in X
 % Translations for all links
 T1 = [1 0 0 0; 0 1 0 l1; 0 0 1 0;0 0 0 1];
 T2 = [1 0 0 0; 0 1 0 l2; 0 0 1 0;0 0 0 1];
-T3 = [1 0 0 l4; 0 1 0 l3; 0 0 1 0;0 0 0 1];
+T3 = [1 0 0 l4; 0 1 0 l3; 0 0 1 l5;0 0 0 1];
 
 % Homogenous transformation matrix from base to EE
 %H04 = @(theta1,theta2,theta3) Rx(theta1)*T1*Ry(theta2)*T2*Rx(theta3)*T3;
