@@ -47,9 +47,9 @@ void do_PID_stuff(float P, float I, float D) {
     //    chatter_3.publish( &int_msg_4 );
     //    //    int16_t e16 = e;
     //    //    int_msg_4.data = e16;
-    //    int16_t p_part16 = p_part;
-    //    int_msg_4.data = p_part16;
-    //    chatter_3.publish( &int_msg_4 );
+        int16_t p_part16 = p_part;
+        int_msg_4.data = p_part16;
+        chatter_3.publish( &int_msg_4 );
     //    int16_t i_part16 = i_part;
     //    int_msg_4.data = i_part16;
     //    chatter_3.publish( &int_msg_4 );
