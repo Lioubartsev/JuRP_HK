@@ -92,8 +92,8 @@ q = [shoulder_pos_val upper_pos_val elbow_pos_val]';
 
 % x and y predictions are shifted to align with the axis of the LQR
 % -1 is multiplied in the y due to the transformation of the axis
-state_trgt = [y_prediction x_prediction context.z_intercept]' - Origin_shift;
-state_trgt = diag([1 -1 1])*state_trgt;
+state_trgt = [x_prediction y_prediction context.z_intercept]' - Origin_shift;
+state_trgt = diag([1 1 1])*state_trgt;
 
 [q_traj] = InvKinLQR(q, state_trgt, context);
 toc
