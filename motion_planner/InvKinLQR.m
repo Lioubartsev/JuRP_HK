@@ -13,12 +13,12 @@ function [q_traj] = InvKinLQR(q, state_trgt, context)
 % coordinate system for the base is defined as x - left/right, y -
 % forwards/backwards, z - up/down.
 
-final_size = 30; % Desired final vector length
+final_size = 20; % Desired final vector length
 
 % Link lengths [m]
-l1 = 0.18;  % Shoulder to upper arm
-l2 = 0.235; % Upper arm to elbow
-l3 = 0.48;  % Elbow to EE in Y
+l1 = 0.180;  % Shoulder to upper arm
+l2 = 0.240; % Upper arm to elbow
+l3 = 0.60; %0.48;  % Elbow to EE in Y
 l4 = 0.06;  % Elbow to EE in X
 l5 = 0.06;  % Elbow to EE in Z
 
@@ -81,12 +81,12 @@ q_init = q;
 e = state_trgt - state;    % Error desried and actual pos
 
 % Maximum number of iterations
-maxIterations = 10000;
+maxIterations = 500;
 iterations = 1; % Counter ++
 
 % Error tolerance for final EE pos norm [m]
-tolerance = 0.01;
-stepsize = 1/1;    % Error stepsize for linearization
+tolerance = 0.02;
+stepsize = 1/2;    % Error stepsize for linearization
 
 % Coordinate initiation
 x = zeros(1,maxIterations); y = zeros(1,maxIterations);
@@ -103,7 +103,7 @@ z = zeros(1,maxIterations); q_traj = zeros(3,maxIterations);
 We = diag([1 1 1]);
 % Damping factor init. Updated in the loop as a function of the error.
 % Wn0 specifies weights for joint usage [Shoulder, upper arm, elbow]
-Wn0 = diag(3*[1 1 1]);
+Wn0 = diag(2*[100000 1 1]);
 % Joint limits (upper bound = lower bound) and joint limit weight
 JointLimUpper  = deg2rad([10 65 120]'); % [Shoulder, upper arm, elbow]
 JointLimLower = deg2rad([-95 -65 -120]'); % [Shoulder, upper arm, elbow]

@@ -33,7 +33,7 @@ function [x_intersect, y_intersect] = ball_trajectory_calculater(context)
         %data_array = i:i+50;
         data_ptr = i;
     else
-        fprintf("Waiting for throw...\n\n")
+        %fprintf("Waiting for throw...\n\n")        
         data_ptr = 1;
         data = receive(context.ou, 10);
         while(data.Objects.Z/1000 < context.z_threshold)
@@ -233,7 +233,7 @@ function [x_intersect, y_intersect] = ball_trajectory_calculater(context)
     
     %% Continue sampling the actual data points
 
-    %if context.DEV_MODE
+    if context.DEV_MODE
             
         if context.DEV_ENVIRONMENT
             i = data_array(end)-50;
@@ -297,7 +297,7 @@ function [x_intersect, y_intersect] = ball_trajectory_calculater(context)
         fprintf('Error in the x-prediction using median: %g cm.\n', abs(x_intersect - x_intersect_actual)*100);
         fprintf('Error in the y-prediction using median: %g cm.\n\n', abs(y_intersect - y_intersect_actual)*100);
     
-    %end
+    end
 
     %% Plots
     
