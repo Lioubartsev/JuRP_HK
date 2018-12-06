@@ -30,8 +30,7 @@ float e = 0; //error
 float e_old = 0; //previous sample error, necessary for d-calculation
 double e_sum = 0; //sum of all errors so far, necessary for i-calculation
 int32_t new_pwm = 0;
-
-static long int time_new = 0; //timer [DELETE THIS LATER]
+unsigned long time_old;
 
 int start_program_bool = 0;
 int temp_char = 0;
@@ -42,6 +41,7 @@ int msg = 0;
 int msgCheck = 0;
 
 int counter = 0;
+int8_t throw_mode = 0;
 
 void setup() {
   //Set up ROS
@@ -79,71 +79,20 @@ void loop() {
   motor_pos = get_serial_value();         //read encoder
   nh.spinOnce();                          //read ref
 
-  do_PID_stuff( 30 , 0.01 , 0); //(p: 3-4 is good)
-
-//  if ( motor_pos < 10 )
-//  {
-//
-//      do_PID_stuff( 25 , 0 , 0); //(p: 3-4 is good)
-//
-////    if ( motor_ref - motor_pos  <  0  )
-////    {
-////      
-////    }
-////    else
-////    {
-////      do_PID_stuff( 5 , 0.01 , 20000); //(p: 3-4 is good)
-////    }
-//
-//
-//
-//  }
-//  else if ( motor_pos < 20 )
-//  {
-//
-//
-//    if ( motor_ref - motor_pos  <  0 )
-//    {
-//      do_PID_stuff( 5 , 0.01 , 0); //(p: 3-4 is good)
-//    }
-//    else
-//    {
-//      do_PID_stuff( 8 , 0.01 , 60000 );
-//    }
-//
-//
-//
-//  }
-//  else if ( motor_pos < 30 )
-//  {
-//
-//
-//    if ( motor_ref - motor_pos  <  0 )
-//    {
-//      do_PID_stuff( 5 , 0.01 , 60000); //(p: 3-4 is good)
-//    }
-//    else
-//    {
-//      do_PID_stuff( 12, 0.01 , 140000 );
-//    }
-//
-//
-//  }
-//  else
-//  {
-//
-//
-//    if ( motor_ref - motor_pos  <  0 )
-//    {
-//      do_PID_stuff( 5 , 0.01 , 10000); //(p: 3-4 is good)
-//    }
-//    else
-//    {
-//      do_PID_stuff( 13, 0.01 , 100000);
-//    }
-
+  while( throw_mode == 1)
+  { 
+    motor_pos = get_serial_value();         //read encoder    
+    analogWrite(PWM_VALUE_PIN, 255);
+    if( motor_pos > 30 )
+    {
+      throw_mode = 2;
+    }
     
-//  }
+  }
+
+  do_PID_stuff( 30 , 4 , 0); 
+
+
 
   counter++;
 

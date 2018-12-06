@@ -31,7 +31,7 @@ float e_old = 0; //previous sample error, necessary for d-calculation
 double e_sum = 0; //sum of all errors so far, necessary for i-calculation
 int32_t new_pwm = 0;
 
-static long int time_new = 0; //timer [DELETE THIS LATER]
+unsigned long time_old;
 
 int start_program_bool = 0;
 int temp_char = 0;
@@ -68,7 +68,7 @@ void setup() {
 void loop() {
   motor_pos = get_serial_value();         //read encoder
   nh.spinOnce();                          //read ref
-  do_PID_stuff(); //Control loop thingy
+  do_PID_stuff(18, 3.5, 0); //Control loop thingy
   counter++;
 
 }

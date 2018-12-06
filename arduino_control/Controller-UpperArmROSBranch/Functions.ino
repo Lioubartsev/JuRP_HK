@@ -15,78 +15,76 @@ void messageCb( const std_msgs::Int16& reference)
 }
 
 
-void do_PID_stuff() {
-
-  if (counter % 5 == 3) {
-    e_old = e;
-  }
+void do_PID_stuff(float P, float I, float D)
+{
+  unsigned long time_new = micros();
+  e_old = e;
   e = motor_ref - motor_pos;
-  static long int time_old = time_new;
-  time_new = micros();
-  
-  static float I = 0.00095;
-  double p_part = 16 * e; //
-  double d_part = 0 * (e - e_old) / ((time_new - time_old)*0.000001);
-  double i_part = 0*I * e_sum; //e_sum just increases so much that it immediately overflows.
-  if (e_sum > 20/I) { //saturation
-    e_sum = 20/I;
-  }
-  else if (e_sum < -20/I) {
-    e_sum = -20/I;
-  }
-  e_sum+=e;
 
+  if (e_sum > 60 / I) { //saturation
+    e_sum = 60 / I;
+  }
+  else if (e_sum < -60 / I) {
+    e_sum = -60 / I;
+  }
 
-  
-  if (counter % 500 == 0) { //needed to slow down the prints to get reasonable values
-    
-    int16_t upp_pos= int16_t(motor_pos*10);
+  double p_part = P * e; //
+  double i_part = I * e_sum; //e_sum just increases so much that it immediately overflows.
+  double d_part = D * (e - e_old) / ((time_new - time_old) * 0.000001);
+
+  e_sum += e * ((time_new - time_old) * 0.000001);
+
+  if (counter % 500 == 0 ) { //needed to slow down the prints to get reasonable values
+
+    int16_t upp_pos = int16_t(motor_pos * 10);
     int_msg_5.data = upp_pos;
     upper_pos.publish( &int_msg_5);
 
-    int16_t motor_ref_debug = motor_ref;
-    int_msg_4.data = motor_ref_debug;  
-    chatter_3.publish( &int_msg_4 );
+    //    int16_t motor_ref_debug = motor_ref;
+    //    int_msg_4.data = motor_ref_debug;
+    //    chatter_3.publish( &int_msg_4 );
+    //    int16_t pos_part16 = motor_pos;
+    //    int_msg_4.data = pos_part16;
+    //    chatter_3.publish( &int_msg_4 );
+    //    //    int16_t e16 = e;
+    //    //    int_msg_4.data = e16;
 
-    int16_t e16 = int16_t(e);
-    int_msg_4.data = e16;
-    chatter_3.publish( &int_msg_4 );
-
-//    int16_t e16 = int16_t(e-e_old);
-//    int_msg_4.data = e16;
-//    chatter_3.publish( &int_msg_4 );
-
-//    int16_t i_part16 = i_part;
-//    int_msg_4.data = i_part16;
-//    chatter_3.publish( &int_msg_4 );
     int16_t p_part16 = p_part;
     int_msg_4.data = p_part16;
-    chatter_3.publish( &int_msg_4 );    
-//    int16_t d_part16 = d_part;
-//    int_msg_4.data = d_part16;
-//    chatter_3.publish( &int_msg_4 );
-    int_msg_4.data = 9999;
     chatter_3.publish( &int_msg_4 );
+
+    int16_t i_part16 = i_part;
+    int_msg_4.data = i_part16;
+    chatter_3.publish( &int_msg_4 );
+
+    int16_t d_part16 = d_part;
+    int_msg_4.data = d_part16;
+    chatter_3.publish( &int_msg_4 );
+
+    //    int_msg_4.data = 9999;
+    //    chatter_3.publish( &int_msg_4 );
+
   }
-  
+
   float pwm = round(p_part + i_part + d_part);
-  if (pwm > 255) {
+  if (pwm > 255 /*255*/ ) {
     pwm = 255;
   }
   else if (pwm < -255) {
     pwm = -255;
   }
   else {} //Nothing is done if the pwm is within the proper intervall!
-  
+
   if (pwm >= 0) {  // Set direction of rotation to driver
     digitalWrite(PWM_DIR_PIN, PWM_POSITIVE_DIR);
-    //Serial.print("Pos  ");
   } else {
     digitalWrite(PWM_DIR_PIN, PWM_NEGATIVE_DIR);
-    //Serial.print("Neg  ");
   }
+
+  //float pwm_1 = ( (pwm_1)*0.3137 +10.0 ) * 2.55 ;
   analogWrite(PWM_VALUE_PIN, abs(pwm));   // Set value of PWM to driver
 
+  time_old = time_new ;
 }
 
 float get_serial_value() {

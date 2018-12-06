@@ -1,5 +1,5 @@
 #define PWM_VALUE_PIN 3 // Value of PWM to driver
-#define PWM_DIR_PIN 4 // Direction of PWM to driver
+#define PWM_DIR_PIN 5 // Direction of PWM to driver
 #define PWM_POSITIVE_DIR LOW
 #define PWM_NEGATIVE_DIR HIGH
 #include <AltSoftSerial.h>
@@ -35,8 +35,7 @@ float e = 0; //error
 float e_old = 0; //previous sample error, necessary for d-calculation
 double e_sum = 0; //sum of all errors so far, necessary for i-calculation
 int32_t new_pwm = 0;
-
-static long int time_new = 0; //timer [DELETE THIS LATER]
+unsigned long time_old;
 
 int start_program_bool = 0;
 int temp_char = 0;
@@ -47,6 +46,7 @@ int msg = 0;
 int msgCheck = 0;
 
 int counter = 0;
+int8_t throw_mode = 0;
 bool thrown = 1;
 
 void setup() {
@@ -61,8 +61,8 @@ void setup() {
   breakfastSerial.begin(74880);
   breakfastSerial.flush();
   //make sure that the software serial pins are input
-  pinMode(8, INPUT);
-  pinMode(9, INPUT);
+  pinMode(8, INPUT); //blu
+  pinMode(9, INPUT); //gren
 
   //Make pin 7 an input
   //pinMode(7, INPUT);
@@ -79,12 +79,26 @@ void setup() {
   //chatter_3.publish( &int_msg_4 );
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
 }
 
 void loop() {
+  
   motor_pos = get_serial_value();         //read encoder
   nh.spinOnce();                          //read ref
-  do_PID_stuff( 3, 0 , 1337);
+
+  while( throw_mode == 1)
+  { 
+    motor_pos = get_serial_value();         //read encoder    
+    analogWrite(PWM_VALUE_PIN, 255);
+    if( motor_pos > 80 )
+    {
+      throw_mode = 2;
+    }
+    
+  }
+ 
+  do_PID_stuff( 2, 3 , 0 ); //do_PID_stuff( 3, 3 , 0 ) for pathetic 12V
 
   counter++;
 
